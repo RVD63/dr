@@ -10,7 +10,8 @@ import HomeView from './components/HomeView';
 import DashboardView from './components/DashboardView';
 import AnalysisLoading from './components/AnalysisLoading';
 import ChatAssistant from './components/ChatAssistant';
-import { AnalysisState, ViewType, HistoricalResult, Language } from './types';
+import Logo from './components/Logo';
+import { AnalysisState, ViewType, HistoricalResult, Language, PatientDetails } from './types';
 import { analyzeRetinalImage, analyzeRetinalVideo } from './services/geminiService';
 import { translations } from './utils/translations';
 
@@ -67,6 +68,7 @@ const App: React.FC = () => {
       videoPreview: null,
       originalImage: null,
       history: savedHistory ? JSON.parse(savedHistory) : [],
+      currentPatientDetails: null
     };
   });
 
@@ -151,14 +153,15 @@ const App: React.FC = () => {
     });
   };
 
-  const handleImageSelected = useCallback(async (base64: string) => {
+  const handleImageSelected = useCallback(async (base64: string, details: PatientDetails) => {
     setState(prev => ({ 
       ...prev, 
       isPreprocessing: true,
       error: null, 
       originalImage: base64,
       imagePreview: base64, 
-      result: null 
+      result: null,
+      currentPatientDetails: details
     }));
 
     const enhancedImage = await preprocessImage(base64);
@@ -174,10 +177,11 @@ const App: React.FC = () => {
       const result = await analyzeRetinalImage(enhancedImage, lang);
       
       const historicalItem: HistoricalResult = {
-        id: Math.random().toString(36).substr(2, 6),
+        id: details.scanId, // Use the scan ID from details
         timestamp: Date.now(),
         imagePreview: enhancedImage,
-        result: result
+        result: result,
+        patientDetails: details
       };
 
       setState(prev => ({ 
@@ -228,6 +232,7 @@ const App: React.FC = () => {
       result: item.result,
       imagePreview: item.imagePreview,
       originalImage: item.imagePreview, 
+      currentPatientDetails: item.patientDetails,
       view: 'report'
     }));
   };
@@ -242,6 +247,7 @@ const App: React.FC = () => {
       error: null,
       imagePreview: null,
       originalImage: null,
+      currentPatientDetails: null
     }));
   };
   
@@ -357,12 +363,13 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {state.view === 'report' && state.result && state.imagePreview && (
+          {state.view === 'report' && state.result && state.imagePreview && state.currentPatientDetails && (
             <div className="space-y-10">
               <AnalysisResults 
                 result={state.result} 
                 imagePreview={state.imagePreview} 
                 originalImage={state.originalImage || state.imagePreview}
+                patientDetails={state.currentPatientDetails}
                 isHighContrast={isHighContrast}
               />
               <div className="flex justify-center pb-20 print:hidden">
@@ -404,7 +411,7 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 flex flex-col items-center">
            <div className="flex items-center space-x-3 mb-8">
               <div className={`p-2 rounded-xl ${isHighContrast ? 'bg-black' : 'bg-slate-900 dark:bg-white'}`}>
-                 <i className={`fas fa-eye text-xl ${isHighContrast ? 'text-[#FFFDD0]' : 'text-white dark:text-slate-900'}`}></i>
+                 <Logo className="w-8 h-8 text-white dark:text-black" isHighContrast={isHighContrast} />
               </div>
               <span className={`text-2xl font-black tracking-tighter uppercase ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{t('appTitle')} <span className={isHighContrast ? 'text-black' : 'text-blue-600 dark:text-blue-400'}>{t('appSubtitle')}</span></span>
            </div>

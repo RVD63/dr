@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import Logo from './Logo';
 
 interface AnalysisLoadingProps {
   isPreprocessing: boolean;
@@ -67,7 +68,7 @@ const AnalysisLoading: React.FC<AnalysisLoadingProps> = ({ isPreprocessing, imag
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <i className={`fas fa-eye text-8xl ${isHighContrast ? 'text-black' : 'text-slate-800'}`}></i>
+              <Logo className="w-40 h-40" isHighContrast={isHighContrast} />
             </div>
           )}
           

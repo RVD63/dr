@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ViewType, Language } from '../types';
+import Logo from './Logo';
 
 interface HeaderProps {
   currentView: ViewType;
@@ -67,18 +68,12 @@ const Header: React.FC<HeaderProps> = ({
         {/* Left Section: Logo + Title */}
         <div className="flex items-center gap-3 min-w-0 flex-shrink-1">
             <div className="flex items-center gap-2 md:gap-3 cursor-pointer group" onClick={() => handleNav('home')}>
-              <div className={`relative w-9 h-9 md:w-11 md:h-11 flex-shrink-0 flex items-center justify-center rounded-xl shadow-lg overflow-hidden transition-transform group-active:scale-95 ${isHighContrast ? 'bg-black' : 'bg-gradient-to-br from-cyan-500 to-blue-700 shadow-cyan-200/50 dark:shadow-none'}`}>
-                {/* Eye Icon Background */}
-                <i className={`fas fa-eye text-lg md:text-2xl ${isHighContrast ? 'text-[#FFFDD0]' : 'text-white'}`}></i>
-                
-                {/* Pupil Overlay with N */}
-                <div className={`absolute w-2.5 h-2.5 md:w-3.5 md:h-3.5 rounded-full flex items-center justify-center ${isHighContrast ? 'bg-[#FFFDD0]' : 'bg-amber-600'} mt-0.5`}>
-                    <span className={`text-[5px] md:text-[7px] font-black ${isHighContrast ? 'text-black' : 'text-white'}`}>N</span>
-                </div>
+              <div className="relative w-10 h-10 md:w-12 md:h-12 flex-shrink-0 transition-transform group-active:scale-95">
+                <Logo isHighContrast={isHighContrast} className="w-full h-full" />
               </div>
               <div className="flex flex-col truncate">
                 <h1 className={`text-base md:text-xl font-black tracking-tight leading-none uppercase truncate ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{t('appTitle')}</h1>
-                <p className={`text-[9px] md:text-[10px] font-bold tracking-[0.15em] uppercase mt-0.5 opacity-80 ${isHighContrast ? 'text-black' : 'text-cyan-600 dark:text-cyan-400'}`}>{t('appSubtitle')}</p>
+                <p className={`text-[9px] md:text-[10px] font-bold tracking-[0.15em] uppercase mt-0.5 opacity-80 ${isHighContrast ? 'text-black' : 'text-blue-600 dark:text-blue-400'}`}>{t('appSubtitle')}</p>
               </div>
             </div>
         </div>
@@ -93,6 +88,7 @@ const Header: React.FC<HeaderProps> = ({
             { id: 'home', label: t('home') },
             { id: 'upload', label: t('diagnosis') },
             { id: 'video', label: t('video') },
+            { id: 'dashboard', label: t('dashboard') },
             { id: 'chat', label: t('assistant') },
           ].map((item) => (
              <button 
@@ -122,22 +118,6 @@ const Header: React.FC<HeaderProps> = ({
         {/* Right Section: Settings/Profile */}
         <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
           
-          {/* Dashboard Button (Desktop) */}
-          <button 
-              onClick={() => handleNav('dashboard')}
-              className={`
-                hidden lg:flex items-center space-x-2 px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-wider border transition-all
-                ${isHighContrast 
-                  ? 'border-black text-black hover:bg-black hover:text-[#FFFDD0]' 
-                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-50 dark:bg-slate-800'
-                }
-                ${currentView === 'dashboard' ? (isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-600 dark:text-blue-400') : ''}
-              `}
-          >
-              <i className="fas fa-hospital-user text-sm"></i>
-              <span>Dash</span>
-          </button>
-
           {/* Compact Language Selector Dropdown */}
           <div className="relative" ref={langMenuRef}>
             <button
@@ -200,7 +180,7 @@ const Header: React.FC<HeaderProps> = ({
               }
             `}
             disabled={isHighContrast}
-            aria-label="Toggle Dark Mode"
+            aria-label={t('toggleTheme')}
           >
             <i className={`fas ${theme === 'dark' ? 'fa-moon' : 'fa-sun'} text-sm md:text-base`}></i>
           </button>
@@ -215,7 +195,7 @@ const Header: React.FC<HeaderProps> = ({
                 : 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-slate-200 dark:border-slate-700 hover:bg-slate-50 shadow-sm'
               }
             `}
-            aria-label="Toggle High Contrast"
+            aria-label={t('toggleContrast')}
           >
             <i className="fas fa-adjust text-sm md:text-base"></i>
           </button>

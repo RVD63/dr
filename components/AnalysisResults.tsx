@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { AnalysisResult, DRSeverity } from '../types';
+import { AnalysisResult, DRSeverity, PatientDetails } from '../types';
 
 interface AnalysisResultsProps {
   result: AnalysisResult;
   imagePreview: string;
   originalImage: string;
+  patientDetails: PatientDetails;
   isHighContrast?: boolean;
 }
 
@@ -29,10 +30,14 @@ const ScoreGauge: React.FC<{ label: string; value: number; color: string; icon: 
   </div>
 );
 
-const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview, originalImage, isHighContrast }) => {
+const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview, originalImage, patientDetails, isHighContrast }) => {
   const [activeTab, setActiveTab] = useState<'original' | 'enhanced' | 'heatmap'>('enhanced');
   const [heatmapOverlay, setHeatmapOverlay] = useState<string | null>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   
+  // Discrete Findings Expansion State
+  const [expandedFinding, setExpandedFinding] = useState<number | null>(null);
+
   // Interactive Tooltip State
   const [tooltip, setTooltip] = useState<{x: number, y: number, text: string, visible: boolean}>({x: 0, y: 0, text: '', visible: false});
   const analysisDataRef = useRef<{width: number, height: number, data: Uint8ClampedArray, intensities: Float32Array} | null>(null);
@@ -68,6 +73,73 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
       b = 0;
     }
     return [Math.round(r), Math.round(g), Math.round(b)];
+  };
+
+  const getFindingExplanation = (text: string): string => {
+    const t = text.toLowerCase();
+    if (t.includes('microaneurysm')) return "Tiny bulges in retinal blood vessels, often the first sign of diabetic retinopathy. They appear as small red dots.";
+    if (t.includes('hemorrhage')) return "Leakage of blood into the retina. Dot/blot hemorrhages are deeper; flame hemorrhages are superficial.";
+    if (t.includes('hard exudate') || (t.includes('exudate') && !t.includes('soft'))) return "Yellow lipid deposits leaking from damaged vessels, often indicating retinal edema and vessel leakage.";
+    if (t.includes('cotton') || t.includes('wool') || t.includes('soft exudate')) return "Fluffy white patches (Cotton Wool Spots) indicating areas where nerve fibers have been damaged by lack of blood supply (ischemia).";
+    if (t.includes('edema') || t.includes('swelling') || t.includes('thickening')) return "Fluid accumulation within the retina, potentially threatening central vision if near the macula.";
+    if (t.includes('neovascularization') || t.includes('new vessel')) return "Growth of abnormal, fragile new blood vessels, characteristic of Proliferative Diabetic Retinopathy (PDR).";
+    if (t.includes('venous') || t.includes('beading')) return "Irregular changes in the width of retinal veins (resembling beads on a string), a sign of significant ischemia.";
+    if (t.includes('drusen')) return "Yellow deposits under the retina, commonly associated with Age-related Macular Degeneration (AMD) rather than DR.";
+    if (t.includes('tortuosity')) return "Abnormal twisting or curling of the retinal blood vessels.";
+    return "A specific pathological change in the retinal structure identified during the AI analysis.";
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `Netra Vision AI Report - ${patientDetails.id}`,
+      text: `NETRA VISION AI REPORT\n--------------------\nPatient: ${patientDetails.name}\nID: ${patientDetails.id}\nAge/Gender: ${patientDetails.age}/${patientDetails.gender}\n\nScan Analysis:\n- Detection: ${result.detection}\n- Severity: ${result.severity}\n- Health Score: ${result.healthScore}/100\n- Key Findings: ${result.keyFindings.join(', ')}\n\nRecommendation: ${result.recommendation}`
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      // Fallback to clipboard
+      navigator.clipboard.writeText(shareData.text);
+      alert('Report summary copied to clipboard.');
+    }
+  };
+
+  const handleExportPDF = () => {
+    if (isGeneratingPDF) return;
+    setIsGeneratingPDF(true);
+
+    const element = document.getElementById('printable-report');
+    if (!element) {
+      setIsGeneratingPDF(false);
+      return;
+    }
+
+    const opt = {
+      margin: 5,
+      filename: `Netra_Vision_Report_${patientDetails.id}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Dynamically load html2pdf.js
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.onload = () => {
+      // @ts-ignore
+      window.html2pdf().set(opt).from(element).save().then(() => {
+        setIsGeneratingPDF(false);
+      });
+    };
+    script.onerror = () => {
+       alert("Failed to load PDF generator. Please try again.");
+       setIsGeneratingPDF(false);
+    }
+    document.body.appendChild(script);
   };
 
   useEffect(() => {
@@ -329,16 +401,19 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div id="printable-report" className="space-y-8 animate-in fade-in duration-700">
       <style>{`
         @media print {
           body, #root, main {
             background-color: white !important;
             color: black !important;
+            overflow: visible !important;
+            height: auto !important;
           }
-          /* Hide scrollbars */
-          ::-webkit-scrollbar { display: none; }
-          /* Ensure graphics are printed if possible */
+          .print\\:hidden { display: none !important; }
+          .print\\:bg-white { background-color: white !important; }
+          .print\\:text-black { color: black !important; }
+          .print\\:border-black { border-color: black !important; }
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
       `}</style>
@@ -352,7 +427,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
         <div className="space-y-1 text-center md:text-left">
           <h2 className={`text-4xl font-black tracking-tight ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'} print:text-black`}>Retinal Analysis <span className={isHighContrast ? 'text-black underline' : 'text-blue-600 dark:text-blue-400'} print:text-black>Report</span></h2>
           <div className={`flex items-center justify-center md:justify-start space-x-2 font-bold text-xs uppercase tracking-widest ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'} print:text-slate-600`}>
-            <span className={`px-2 py-0.5 rounded ${isHighContrast ? 'bg-gray-100 border border-black' : 'bg-slate-100 dark:bg-slate-800'} print:bg-white print:border`}>ID: {Math.random().toString(36).substr(2, 6).toUpperCase()}</span>
+            <span className={`px-2 py-0.5 rounded ${isHighContrast ? 'bg-gray-100 border border-black' : 'bg-slate-100 dark:bg-slate-800'} print:bg-white print:border`}>Ref: {patientDetails.scanId}</span>
             <span>•</span>
             <span>Date: {new Date().toLocaleDateString()}</span>
           </div>
@@ -371,6 +446,32 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
         </div>
       </div>
 
+      {/* Patient Information Section */}
+      <div className={`rounded-3xl p-6 border shadow-sm ${
+        isHighContrast 
+          ? 'bg-white border-black' 
+          : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'
+      } print:border-black print:bg-white`}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="space-y-1">
+                  <label className={`text-[10px] font-bold uppercase tracking-widest ${isHighContrast ? 'text-black' : 'text-slate-400'}`}>Patient Name</label>
+                  <div className={`font-bold text-lg ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{patientDetails.name}</div>
+              </div>
+              <div className="space-y-1">
+                  <label className={`text-[10px] font-bold uppercase tracking-widest ${isHighContrast ? 'text-black' : 'text-slate-400'}`}>Patient ID</label>
+                  <div className={`font-mono font-bold text-lg ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{patientDetails.id}</div>
+              </div>
+              <div className="space-y-1">
+                  <label className={`text-[10px] font-bold uppercase tracking-widest ${isHighContrast ? 'text-black' : 'text-slate-400'}`}>Age</label>
+                  <div className={`font-bold text-lg ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{patientDetails.age}</div>
+              </div>
+              <div className="space-y-1">
+                  <label className={`text-[10px] font-bold uppercase tracking-widest ${isHighContrast ? 'text-black' : 'text-slate-400'}`}>Gender</label>
+                  <div className={`font-bold text-lg ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{patientDetails.gender}</div>
+              </div>
+          </div>
+      </div>
+
       {/* Numerical Score Dashboard */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <ScoreGauge label="Overall Health" value={result.healthScore} color="text-emerald-500" icon="fa-heart-pulse" isHighContrast={isHighContrast} />
@@ -385,8 +486,8 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
           
           {/* Visual Evidence Section */}
           <div className={`lg:col-span-5 p-8 flex flex-col border-r ${isHighContrast ? 'bg-gray-50 border-black' : 'bg-black/40 border-slate-800'} print:bg-white print:border-r print:border-slate-200`}>
-            {/* View Toggle Controls & Download */}
-            <div className="mb-8 flex flex-col gap-4 print:hidden">
+            {/* View Toggle Controls & Download - HIDDEN IN PRINT */}
+            <div className="mb-8 flex flex-col gap-4 print:hidden" data-html2canvas-ignore="true">
                <div className="grid grid-cols-3 gap-3">
                 {[
                   { id: 'original', label: 'Original', icon: 'fa-camera' },
@@ -420,7 +521,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
                 <button 
                   onClick={downloadCurrentView}
                   className={`
-                    flex-1 py-4 rounded-xl font-bold uppercase tracking-widest text-xs flex items-center justify-center space-x-3 transition-all border-2
+                    flex-1 py-4 rounded-xl font-bold uppercase tracking-widest text-xs flex items-center justify-center space-x-2 transition-all border-2
                     ${isHighContrast 
                       ? 'bg-white text-black border-black hover:bg-black hover:text-[#FFFDD0]' 
                       : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white hover:border-slate-500'
@@ -433,9 +534,25 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
                 </button>
 
                 <button 
-                  onClick={() => window.print()}
+                  onClick={handleShare}
                   className={`
-                    flex-1 py-4 rounded-xl font-bold uppercase tracking-widest text-xs flex items-center justify-center space-x-3 transition-all border-2
+                    flex-1 py-4 rounded-xl font-bold uppercase tracking-widest text-xs flex items-center justify-center space-x-2 transition-all border-2
+                    ${isHighContrast 
+                      ? 'bg-white text-black border-black hover:bg-black hover:text-[#FFFDD0]' 
+                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white hover:border-slate-500'
+                    }
+                  `}
+                  title="Share Report"
+                >
+                  <i className="fas fa-share-alt"></i>
+                  <span>Share</span>
+                </button>
+
+                <button 
+                  onClick={handleExportPDF}
+                  disabled={isGeneratingPDF}
+                  className={`
+                    flex-1 py-4 rounded-xl font-bold uppercase tracking-widest text-xs flex items-center justify-center space-x-2 transition-all border-2
                     ${isHighContrast 
                       ? 'bg-white text-black border-black hover:bg-black hover:text-[#FFFDD0]' 
                       : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white hover:border-slate-500'
@@ -443,8 +560,12 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
                   `}
                   title="Export Report as PDF"
                 >
-                  <i className="fas fa-file-pdf"></i>
-                  <span>Export PDF</span>
+                  {isGeneratingPDF ? (
+                    <i className="fas fa-spinner animate-spin"></i>
+                  ) : (
+                    <i className="fas fa-file-pdf"></i>
+                  )}
+                  <span>PDF</span>
                 </button>
               </div>
             </div>
@@ -464,7 +585,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
               onTouchEnd={handleTouchEnd}
             >
               {/* Zoom Controls */}
-              <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 print:hidden">
+              <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 print:hidden" data-html2canvas-ignore="true">
                 <button 
                   onClick={() => handleZoom('in')}
                   className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-lg transition-transform active:scale-95 ${isHighContrast ? 'bg-white text-black border border-black' : 'bg-slate-800/90 text-white hover:bg-blue-600'}`}
@@ -669,11 +790,25 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
                 <h3 className={`text-xs font-bold uppercase tracking-[0.3em] mb-6 ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'} print:text-slate-600`}>Discrete Findings</h3>
                 <ul className="space-y-4">
                   {result.keyFindings.map((finding, idx) => (
-                    <li key={idx} className={`flex items-start group ${isHighContrast ? 'text-black' : 'text-slate-400 dark:text-slate-300'} print:text-black`}>
-                      <div className={`mt-1 mr-4 p-1.5 rounded-lg transition-colors ${isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-slate-800 dark:bg-slate-800 text-slate-500 group-hover:bg-blue-600/20 group-hover:text-blue-400'} print:bg-slate-200 print:text-black`}>
-                        <i className="fas fa-microscope text-xs"></i>
+                    <li key={idx} className={`flex flex-col group ${isHighContrast ? 'text-black' : 'text-slate-400 dark:text-slate-300'} print:text-black`}>
+                      <div className="flex items-start cursor-pointer" onClick={() => setExpandedFinding(expandedFinding === idx ? null : idx)}>
+                        <div className={`mt-1 mr-4 p-1.5 rounded-lg transition-colors ${isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-slate-800 dark:bg-slate-800 text-slate-500 group-hover:bg-blue-600/20 group-hover:text-blue-400'} print:bg-slate-200 print:text-black`}>
+                          <i className="fas fa-microscope text-xs"></i>
+                        </div>
+                        <span className="text-sm font-medium leading-tight flex-grow">{finding}</span>
+                        <button className="ml-2 p-1.5 focus:outline-none rounded-full hover:bg-slate-200/20 dark:hover:bg-slate-700/50 transition-colors">
+                          <i className={`fas ${expandedFinding === idx ? 'fa-chevron-up' : 'fa-info-circle'} text-xs opacity-70 hover:opacity-100 ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}></i>
+                        </button>
                       </div>
-                      <span className="text-sm font-medium leading-tight">{finding}</span>
+                      
+                      {expandedFinding === idx && (
+                        <div className={`mt-3 ml-11 text-xs p-4 rounded-xl shadow-inner animate-in fade-in slide-in-from-top-2 duration-300 ${isHighContrast ? 'bg-gray-100 text-black border-l-4 border-black' : 'bg-slate-800/40 text-slate-300 border-l-4 border-blue-500'}`}>
+                           <p className="leading-relaxed">
+                             <span className="font-bold mr-1">Medical Note:</span>
+                             {getFindingExplanation(finding)}
+                           </p>
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>

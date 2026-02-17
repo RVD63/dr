@@ -7,8 +7,9 @@ export enum DRSeverity {
   PROLIFERATIVE = 'Proliferative'
 }
 
-export type ViewType = 'home' | 'upload' | 'report' | 'dashboard' | 'video' | 'chat';
+export type ViewType = 'home' | 'upload' | 'report' | 'dashboard' | 'video' | 'chat' | 'generate';
 export type Language = 'en' | 'hi' | 'ta' | 'te' | 'kn';
+export type AspectRatio = '1:1' | '2:3' | '3:2' | '3:4' | '4:3' | '9:16' | '16:9' | '21:9';
 
 export interface ChatMessage {
   id: string;
@@ -16,6 +17,15 @@ export interface ChatMessage {
   text: string;
   timestamp: number;
   isEmergency?: boolean;
+  sources?: { title: string; uri: string }[];
+}
+
+export interface PatientDetails {
+  name: string;
+  id: string;
+  age: string;
+  gender: string;
+  scanId: string;
 }
 
 export interface AnalysisResult {
@@ -52,6 +62,7 @@ export interface HistoricalResult {
   timestamp: number;
   imagePreview: string;
   result: AnalysisResult;
+  patientDetails: PatientDetails;
 }
 
 export interface AnalysisState {
@@ -65,4 +76,5 @@ export interface AnalysisState {
   videoPreview: string | null;
   originalImage: string | null;
   history: HistoricalResult[];
+  currentPatientDetails: PatientDetails | null;
 }

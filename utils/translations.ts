@@ -3,7 +3,7 @@ import { Language } from "../types";
 
 export const translations: Record<Language, Record<string, string>> = {
   en: {
-    appTitle: "NETRA-VISION AI",
+    appTitle: "NETRA VISION AI",
     appSubtitle: "Enterprise AI",
     home: "Home",
     diagnosis: "Diagnosis",
@@ -14,7 +14,7 @@ export const translations: Record<Language, Record<string, string>> = {
     heroTitle: "Precision",
     heroTitleHighlight: "Retinal",
     heroTitleSuffix: "Monitoring.",
-    heroDesc: "Netra-Vision AI integrates advanced computer vision with clinical-grade diagnostics to identify Diabetic Retinopathy at its earliest stages.",
+    heroDesc: "Netra Vision AI integrates advanced computer vision with clinical-grade diagnostics to identify Diabetic Retinopathy at its earliest stages.",
     startScan: "Begin Diagnostic Scan",
     viewDocs: "View Documentation",
     uploadTitle: "Upload Retinal Scan",
@@ -28,6 +28,13 @@ export const translations: Record<Language, Record<string, string>> = {
     noHistory: "No Historical Data",
     newScan: "New Clinical Scan",
     search: "Search records...",
+    // Header & Actions
+    toggleTheme: "Toggle Dark Mode",
+    toggleContrast: "Toggle High Contrast",
+    exportPDF: "Export PDF",
+    share: "Share Report",
+    download: "Download View",
+    close: "Close",
     // Chat Translations
     chatWelcome: "Hello. I am your Retinal Health Assistant. How can I help you today?",
     chatPlaceholder: "Type your question...",
@@ -42,7 +49,7 @@ export const translations: Record<Language, Record<string, string>> = {
     emergencyAudio: "Medical Alert. Please contact a doctor immediately."
   },
   hi: {
-    appTitle: "नेत्र-विज़न AI",
+    appTitle: "नेत्र विज़न AI",
     appSubtitle: "एंटरप्राइज एआई",
     home: "होम",
     diagnosis: "निदान",
@@ -53,7 +60,7 @@ export const translations: Record<Language, Record<string, string>> = {
     heroTitle: "सटीक",
     heroTitleHighlight: "रेटिनल",
     heroTitleSuffix: "निगरानी।",
-    heroDesc: "नेत्र-विज़न AI डायबिटिक रेटिनोपैथी को शुरुआती चरणों में पहचानने के लिए क्लिनिकल डायग्नोस्टिक्स के साथ उन्नत कंप्यूटर विजन को एकीकृत करता है।",
+    heroDesc: "नेत्र विज़न AI डायबिटिक रेटिनोपैथी को शुरुआती चरणों में पहचानने के लिए क्लिनिकल डायग्नोस्टिक्स के साथ उन्नत कंप्यूटर विजन को एकीकृत करता है।",
     startScan: "निदान स्कैन शुरू करें",
     viewDocs: "दस्तावेज़ देखें",
     uploadTitle: "रेटिनल स्कैन अपलोड करें",
@@ -67,6 +74,13 @@ export const translations: Record<Language, Record<string, string>> = {
     noHistory: "कोई पिछला डेटा नहीं",
     newScan: "नया क्लिनिकल स्कैन",
     search: "रिकॉर्ड खोजें...",
+    // Header & Actions
+    toggleTheme: "डार्क मोड टॉगल करें",
+    toggleContrast: "हाई कंट्रास्ट टॉगल करें",
+    exportPDF: "PDF निर्यात करें",
+    share: "रिपोर्ट साझा करें",
+    download: "दृश्य डाउनलोड करें",
+    close: "बंद करें",
     // Chat Translations
     chatWelcome: "नमस्ते। मैं आपका रेटिनल हेल्थ असिस्टेंट हूं। आज मैं आपकी कैसे मदद कर सकता हूं?",
     chatPlaceholder: "अपना प्रश्न टाइप करें...",
@@ -78,10 +92,10 @@ export const translations: Record<Language, Record<string, string>> = {
     chatAssistantSubtitle: "हमेशा मदद के लिए उपलब्ध",
     emergencyAlert: "⚠️ चिकित्सा चेतावनी: आपके लक्षण एक चिकित्सा आपात स्थिति का संकेत दे सकते हैं। कृपया तुरंत किसी नेत्र विशेषज्ञ या आपातकालीन सेवाओं से संपर्क करें।",
     emergencyCall: "आपातकालीन कॉल",
-    emergencyAudio: "चिकित्सा चेतावनी। कृपया तुरंत डॉक्टर से संपर्क करें।"
+    emergencyAudio: "चिकित्सा चेतावनी। कृपया तुरंत डॉक्टर से संपर्क करें."
   },
   ta: {
-    appTitle: "நேத்ரா-விஷன் AI",
+    appTitle: "நேத்ரா விஷன் AI",
     appSubtitle: "என்டர்பிரைஸ் AI",
     home: "முகப்பு",
     diagnosis: "கண்டறிதல்",
@@ -92,7 +106,7 @@ export const translations: Record<Language, Record<string, string>> = {
     heroTitle: "துல்லியமான",
     heroTitleHighlight: "விழித்திரை",
     heroTitleSuffix: "கண்காணிப்பு.",
-    heroDesc: "நேத்ரா-விஷன் AI நீரிழிவு விழித்திரை நோயை அதன் ஆரம்ப கட்டங்களில் கண்டறிய மேம்பட்ட கணினி பார்வையை மருத்துவத் தரத்துடன் ஒருங்கிணைக்கிறது.",
+    heroDesc: "நேத்ரா விஷன் AI நீரிழிவு விழித்திரை நோயை அதன் ஆரம்ப கட்டங்களில் கண்டறிய மேம்பட்ட கணினி பார்வையை மருத்துவத் தரத்துடன் ஒருங்கிணைக்கிறது.",
     startScan: "ஸ்கேன் தொடங்கவும்",
     viewDocs: "ஆவணங்கள்",
     uploadTitle: "விழித்திரை ஸ்கேன்",
@@ -106,6 +120,13 @@ export const translations: Record<Language, Record<string, string>> = {
     noHistory: "வரலாற்றுத் தரவு இல்லை",
     newScan: "புதிய ஸ்கேன்",
     search: "தேடுக...",
+    // Header & Actions
+    toggleTheme: "தீம் மாற்று",
+    toggleContrast: "மாறுபாட்டை மாற்று",
+    exportPDF: "PDF ஏற்றுமதி",
+    share: "பகிர்",
+    download: "பதிவிறக்க",
+    close: "மூடு",
     // Chat Translations
     chatWelcome: "வணக்கம். நான் உங்கள் விழித்திரை நல உதவியாளர். இன்று நான் உங்களுக்கு எப்படி உதவ முடியும்?",
     chatPlaceholder: "உங்கள் கேள்வியைத் தட்டச்சு செய்க...",
@@ -120,7 +141,7 @@ export const translations: Record<Language, Record<string, string>> = {
     emergencyAudio: "மருத்துவ எச்சரிக்கை. உடனே மருத்துவரை அணுகவும்."
   },
   te: {
-    appTitle: "నేత్ర-విజన్ AI",
+    appTitle: "నేత్ర విజన్ AI",
     appSubtitle: "ఎంటర్ప్రైజ్ AI",
     home: "హోమ్",
     diagnosis: "నిర్ధారణ",
@@ -131,7 +152,7 @@ export const translations: Record<Language, Record<string, string>> = {
     heroTitle: "ఖచ్చితమైన",
     heroTitleHighlight: "రెటీనా",
     heroTitleSuffix: "పర్యవేక్షణ.",
-    heroDesc: "నేత్ర-విజన్ AI డయాబెటిక్ రెటినోపతిని ప్రారంభ దశలోనే గుర్తించడానికి క్లినికల్ డయాగ్నస్టిక్స్‌తో అధునాతన కంప్యూటర్ విజన్‌ను అనుసంధానిస్తుంది.",
+    heroDesc: "నేత్ర విజన్ AI డయాబెటిక్ రెటినోపతిని ప్రారంభ దశలోనే గుర్తించడానికి క్లినికల్ డయాగ్నస్టిక్స్‌తో అధునాతన కంప్యూటర్ విజన్‌ను అనుసంధానిస్తుంది.",
     startScan: "స్కాన్ ప్రారంభించండి",
     viewDocs: "పత్రాలు చూడండి",
     uploadTitle: "రెటీనా స్కాన్",
@@ -145,6 +166,13 @@ export const translations: Record<Language, Record<string, string>> = {
     noHistory: "చరిత్ర లేదు",
     newScan: "కొత్త స్కాన్",
     search: "శోధించండి...",
+    // Header & Actions
+    toggleTheme: "థీమ్ మార్చండి",
+    toggleContrast: "కాంట్రాస్ట్ మార్చండి",
+    exportPDF: "PDF ఎగుమతి",
+    share: "భాగస్వామ్యం చేయండి",
+    download: "డౌన్‌లోడ్",
+    close: "మూసివేయి",
     // Chat Translations
     chatWelcome: "నమస్తే. నేను మీ రెటీనా హెల్త్ అసిస్టెంట్. ఈ రోజు నేను మీకు ఎలా సహాయపడగలను?",
     chatPlaceholder: "మీ ప్రశ్నను టైప్ చేయండి...",
@@ -159,7 +187,7 @@ export const translations: Record<Language, Record<string, string>> = {
     emergencyAudio: "వైద్య హెచ్చరిక. దయచేసి వెంటనే వైద్యుడిని సంప్రదించండి."
   },
   kn: {
-    appTitle: "ನೇತ್ರ-ವಿಷನ್ AI",
+    appTitle: "ನೇತ್ರ ವಿಷನ್ AI",
     appSubtitle: "ಎಂಟರ್‌ಪ್ರೈಸ್ AI",
     home: "ಮುಖಪುಟ",
     diagnosis: "ರೋಗನಿರ್ಣಯ",
@@ -170,7 +198,7 @@ export const translations: Record<Language, Record<string, string>> = {
     heroTitle: "ನಿಖರವಾದ",
     heroTitleHighlight: "ರೆಟಿನಾ",
     heroTitleSuffix: "ಮೇಲ್ವಿಚಾರಣೆ.",
-    heroDesc: "ನೇತ್ರ-ವಿಷನ್ AI ಡಯಾಬಿಟಿಕ್ ರೆಟಿನೋಪತಿಯನ್ನು ಆರಂಭಿಕ ಹಂತಗಳಲ್ಲಿ ಗುರುತಿಸಲು ಸುಧಾರಿತ ಕಂಪ್ಯೂಟರ್ ವಿಷನ್ ಅನ್ನು ಕ್ಲಿನಿಕಲ್ ಡಯಾಗ್ನೋಸ್ಟಿಕ್ಸ್‌ನೊಂದಿಗೆ ಸಂಯೋಜಿಸುತ್ತದೆ.",
+    heroDesc: "ನೇತ್ರ ವಿಷನ್ AI ಡಯಾಬಿಟಿಕ್ ರೆಟಿನೋಪತಿಯನ್ನು ಆರಂಭಿಕ ಹಂತಗಳಲ್ಲಿ ಗುರುತಿಸಲು ಸುಧಾರಿತ ಕಂಪ್ಯೂಟರ್ ವಿಷನ್ ಅನ್ನು ಕ್ಲಿನಿಕಲ್ ಡಯಾಗ್ನೋಸ್ಟಿಕ್ಸ್‌ನೊಂದಿಗೆ ಸಂಯೋಜಿಸುತ್ತದೆ.",
     startScan: "ಸ್ಕ್ಯಾನ್ ಪ್ರಾರಂಭಿಸಿ",
     viewDocs: "ದಾಖಲೆಗಳು",
     uploadTitle: "ರೆಟಿನಾ ಸ್ಕ್ಯಾನ್",
@@ -184,6 +212,13 @@ export const translations: Record<Language, Record<string, string>> = {
     noHistory: "ಯಾವುದೇ ಇತಿಹಾಸವಿಲ್ಲ",
     newScan: "ಹೊಸ ಸ್ಕ್ಯಾನ್",
     search: "ಹುಡುಕಿ...",
+    // Header & Actions
+    toggleTheme: "ಥೀಮ್ ಬದಲಾಯಿಸಿ",
+    toggleContrast: "ಕಾಂಟ್ರಾಸ್ಟ್ ಬದಲಾಯಿಸಿ",
+    exportPDF: "PDF ರಫ್ತು",
+    share: "ಹಂಚಿಕೊಳ್ಳಿ",
+    download: "ಡೌನ್‌ಲೋಡ್",
+    close: "ಮುಚ್ಚಿ",
     // Chat Translations
     chatWelcome: "ನಮಸ್ಕಾರ. ನಾನು ನಿಮ್ಮ ರೆಟಿನಾ ಆರೋಗ್ಯ ಸಹಾಯಕ. ಇಂದು ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಲ್ಲೆ?",
     chatPlaceholder: "ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ಟೈಪ್ ಮಾಡಿ...",

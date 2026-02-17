@@ -10,11 +10,11 @@ interface ChatAssistantProps {
 }
 
 const EMERGENCY_KEYWORDS = [
-  'pain', 'blind', 'loss of vision', 'flash', 'curtain', 'hurt', 'emergency', 'sudden', // English
-  'दर्द', 'अंधा', 'रोशनी', 'आपातकालीन', // Hindi
-  'வலி', 'பார்வை இழப்பு', 'அவசரம்', // Tamil
-  'నొప్పి', 'చూపు', 'అత్యవసర', // Telugu
-  'ನೋವು', 'ದೃಷ್ಟಿ', 'ತುರ್ತು' // Kannada
+  'pain', 'blind', 'loss of vision', 'flash', 'curtain', 'hurt', 'emergency', 'sudden',
+  'दर्द', 'अंधा', 'रोशनी', 'आपातकालीन',
+  'வலி', 'பார்வை இழப்பு', 'அவசரம்',
+  'నొప్పి', 'చూపు', 'అత్యవసర',
+  'ನೋವು', 'ದೃಷ್ಟಿ', 'ತುರ್ತು'
 ];
 
 const ChatAssistant: React.FC<ChatAssistantProps> = ({ isHighContrast, lang, t }) => {
@@ -30,6 +30,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isHighContrast, lang, t }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [useSearch, setUseSearch] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -95,11 +96,12 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isHighContrast, lang, t }
     }
 
     try {
-      const responseText = await getChatResponse(messages, text, lang);
+      const { text: responseText, sources } = await getChatResponse(messages, text, lang, useSearch);
       const botMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'model',
         text: responseText,
+        sources: sources,
         timestamp: Date.now()
       };
       setMessages(prev => [...prev, botMsg]);
@@ -124,8 +126,6 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isHighContrast, lang, t }
   ];
 
   return (
-    // Height calculation: 100vh minus (Header approx 80px + BottomNav 64px + Padding) for mobile
-    // Fallback to 80vh for Desktop
     <div className={`flex flex-col h-[calc(100vh-12rem)] md:h-[80vh] rounded-3xl overflow-hidden shadow-2xl border ${isHighContrast ? 'bg-[#FFFDD0] border-black' : 'bg-white border-slate-200'} animate-in slide-in-from-bottom-4 duration-500`}>
       
       {/* Header */}
@@ -139,12 +139,25 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isHighContrast, lang, t }
             <p className={`text-xs md:text-sm font-medium ${isHighContrast ? 'opacity-80' : 'text-slate-500'}`}>{t('chatAssistantSubtitle')}</p>
           </div>
         </div>
+        
+        {/* Search Toggle */}
+        <button 
+          onClick={() => setUseSearch(!useSearch)}
+          className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border-2 transition-all flex items-center gap-2 ${
+            useSearch 
+             ? (isHighContrast ? 'bg-[#FFFDD0] text-black border-[#FFFDD0]' : 'bg-blue-600 text-white border-blue-600')
+             : (isHighContrast ? 'border-[#FFFDD0] text-[#FFFDD0]' : 'bg-white text-slate-500 border-slate-200')
+          }`}
+        >
+          <i className={`fas ${useSearch ? 'fa-globe' : 'fa-brain'}`}></i>
+          {useSearch ? 'Web Search' : 'Pro Assistant'}
+        </button>
       </div>
 
       {/* Messages Area */}
       <div className="flex-grow overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6">
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
             <div 
               className={`
                 max-w-[90%] md:max-w-[85%] p-4 md:p-5 rounded-2xl text-base md:text-lg font-medium leading-relaxed
@@ -158,6 +171,28 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isHighContrast, lang, t }
             >
               {msg.isEmergency && <div className="font-black uppercase mb-2 text-lg md:text-xl"><i className="fas fa-exclamation-triangle mr-2"></i>Urgent</div>}
               {msg.text}
+              
+              {/* Citations/Sources */}
+              {msg.sources && msg.sources.length > 0 && (
+                <div className={`mt-4 pt-3 border-t ${isHighContrast ? 'border-black/20' : 'border-slate-300'}`}>
+                  <p className="text-xs font-bold uppercase mb-2 opacity-70">Sources:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {msg.sources.map((source, idx) => (
+                      <a 
+                        key={idx} 
+                        href={source.uri} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={`text-xs px-2 py-1 rounded max-w-[200px] truncate ${isHighContrast ? 'bg-black/10 hover:bg-black/20 text-black' : 'bg-white hover:bg-blue-50 text-blue-600 shadow-sm'}`}
+                      >
+                        <i className="fas fa-external-link-alt mr-1"></i>
+                        {source.title}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {msg.isEmergency && (
                  <button className="mt-4 w-full bg-white text-red-600 font-black py-3 rounded-xl uppercase tracking-widest hover:bg-gray-100 transition-colors">
                     {t('emergencyCall')}
@@ -169,7 +204,8 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isHighContrast, lang, t }
         {isLoading && (
           <div className="flex justify-start">
             <div className={`p-4 rounded-2xl ${isHighContrast ? 'bg-white border-2 border-black' : 'bg-slate-100'}`}>
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 items-center">
+                 {useSearch && <i className="fas fa-globe-americas animate-spin text-slate-400 mr-2"></i>}
                 <div className="w-2 h-2 md:w-3 md:h-3 bg-slate-400 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 md:w-3 md:h-3 bg-slate-400 rounded-full animate-bounce delay-75"></div>
                 <div className="w-2 h-2 md:w-3 md:h-3 bg-slate-400 rounded-full animate-bounce delay-150"></div>
@@ -207,7 +243,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isHighContrast, lang, t }
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend(input)}
-            placeholder={t('chatPlaceholder')}
+            placeholder={useSearch ? "Ask a question to search the web..." : t('chatPlaceholder')}
             className={`
               flex-grow p-3 md:p-4 rounded-xl text-base md:text-lg outline-none border-2 transition-all
               ${isHighContrast 
