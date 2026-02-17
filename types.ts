@@ -7,7 +7,16 @@ export enum DRSeverity {
   PROLIFERATIVE = 'Proliferative'
 }
 
-export type ViewType = 'home' | 'upload' | 'report' | 'dashboard';
+export type ViewType = 'home' | 'upload' | 'report' | 'dashboard' | 'video' | 'chat';
+export type Language = 'en' | 'hi' | 'ta' | 'te' | 'kn';
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+  timestamp: number;
+  isEmergency?: boolean;
+}
 
 export interface AnalysisResult {
   detection: string;
@@ -27,6 +36,17 @@ export interface AnalysisResult {
   };
 }
 
+export interface VideoAnalysisResult {
+  summary: string;
+  findings: string[];
+  drDetails: {
+    detected: boolean;
+    severity: string;
+    evidence: string;
+  };
+  recommendations: string;
+}
+
 export interface HistoricalResult {
   id: string;
   timestamp: number;
@@ -39,8 +59,10 @@ export interface AnalysisState {
   isLoading: boolean;
   isPreprocessing: boolean;
   result: AnalysisResult | null;
+  videoResult: VideoAnalysisResult | null;
   error: string | null;
   imagePreview: string | null;
+  videoPreview: string | null;
   originalImage: string | null;
   history: HistoricalResult[];
 }

@@ -1,66 +1,223 @@
 
-import React from 'react';
-import { ViewType } from '../types';
+import React, { useState, useRef, useEffect } from 'react';
+import { ViewType, Language } from '../types';
 
 interface HeaderProps {
   currentView: ViewType;
   setView: (view: ViewType) => void;
   hasResult: boolean;
+  isHighContrast: boolean;
+  toggleContrast: () => void;
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+  lang: Language;
+  setLang: (lang: Language) => void;
+  t: (key: string) => string;
 }
 
-const Header: React.FC<HeaderProps> = ({ currentView, setView, hasResult }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  currentView, setView, hasResult, isHighContrast, toggleContrast,
+  theme, toggleTheme, lang, setLang, t 
+}) => {
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const langMenuRef = useRef<HTMLDivElement>(null);
+
+  const triggerHaptic = () => {
+    if (navigator.vibrate) navigator.vibrate(10);
+  };
+
+  const handleNav = (view: ViewType) => {
+    triggerHaptic();
+    setView(view);
+  };
+
+  const handleContrastToggle = () => {
+    triggerHaptic();
+    toggleContrast();
+  };
+
+  const languages: { code: Language; label: string; name: string }[] = [
+    { code: 'en', label: 'EN', name: 'English' },
+    { code: 'hi', label: 'HI', name: 'हिंदी' },
+    { code: 'ta', label: 'TA', name: 'தமிழ்' },
+    { code: 'te', label: 'TE', name: 'తెలుగు' },
+    { code: 'kn', label: 'KN', name: 'ಕನ್ನಡ' },
+  ];
+
+  const currentLang = languages.find(l => l.code === lang) || languages[0];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
+        setIsLangOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        <div className="flex items-center space-x-4 cursor-pointer" onClick={() => setView('home')}>
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-2.5 rounded-xl shadow-lg shadow-blue-200">
-            <i className="fas fa-eye text-white text-xl"></i>
-          </div>
-          <div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none">RETINAVISION</h1>
-            <p className="text-[10px] text-blue-600 font-bold tracking-[0.2em] uppercase mt-1">Enterprise AI</p>
-          </div>
+    <header className={`${
+      isHighContrast 
+        ? 'bg-[#FFFDD0] border-b-2 border-black' 
+        : 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800'
+    } sticky top-0 z-50 transition-all duration-300 print:hidden safe-top`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 md:h-20 flex items-center justify-between gap-2">
+        
+        {/* Left Section: Logo + Title */}
+        <div className="flex items-center gap-3 min-w-0 flex-shrink-1">
+            <div className="flex items-center gap-2 md:gap-3 cursor-pointer group" onClick={() => handleNav('home')}>
+              <div className={`relative w-9 h-9 md:w-11 md:h-11 flex-shrink-0 flex items-center justify-center rounded-xl shadow-lg overflow-hidden transition-transform group-active:scale-95 ${isHighContrast ? 'bg-black' : 'bg-gradient-to-br from-cyan-500 to-blue-700 shadow-cyan-200/50 dark:shadow-none'}`}>
+                {/* Eye Icon Background */}
+                <i className={`fas fa-eye text-lg md:text-2xl ${isHighContrast ? 'text-[#FFFDD0]' : 'text-white'}`}></i>
+                
+                {/* Pupil Overlay with N */}
+                <div className={`absolute w-2.5 h-2.5 md:w-3.5 md:h-3.5 rounded-full flex items-center justify-center ${isHighContrast ? 'bg-[#FFFDD0]' : 'bg-amber-600'} mt-0.5`}>
+                    <span className={`text-[5px] md:text-[7px] font-black ${isHighContrast ? 'text-black' : 'text-white'}`}>N</span>
+                </div>
+              </div>
+              <div className="flex flex-col truncate">
+                <h1 className={`text-base md:text-xl font-black tracking-tight leading-none uppercase truncate ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{t('appTitle')}</h1>
+                <p className={`text-[9px] md:text-[10px] font-bold tracking-[0.15em] uppercase mt-0.5 opacity-80 ${isHighContrast ? 'text-black' : 'text-cyan-600 dark:text-cyan-400'}`}>{t('appSubtitle')}</p>
+              </div>
+            </div>
         </div>
 
-        <nav className="hidden md:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
-          <button 
-            onClick={() => setView('home')}
-            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${currentView === 'home' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            Home
-          </button>
-          <button 
-            onClick={() => setView('dashboard')}
-            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${currentView === 'dashboard' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            Records
-          </button>
-          <button 
-            onClick={() => setView('upload')}
-            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${currentView === 'upload' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            Diagnosis
-          </button>
+        {/* Center Nav - Desktop Only */}
+        <nav className={`hidden xl:flex items-center p-1 rounded-xl mx-4 ${
+          isHighContrast 
+            ? 'bg-white border-2 border-black' 
+            : 'bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700'
+        }`}>
+          {[
+            { id: 'home', label: t('home') },
+            { id: 'upload', label: t('diagnosis') },
+            { id: 'video', label: t('video') },
+            { id: 'chat', label: t('assistant') },
+          ].map((item) => (
+             <button 
+                key={item.id}
+                onClick={() => handleNav(item.id as ViewType)}
+                className={`
+                  px-4 py-2 rounded-lg text-sm font-bold transition-all mx-0.5
+                  ${currentView === item.id 
+                    ? (isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm') 
+                    : (isHighContrast ? 'text-black hover:bg-gray-100' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200')
+                  }
+                `}
+              >
+                {item.label}
+              </button>
+          ))}
           {hasResult && (
             <button 
-              onClick={() => setView('report')}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${currentView === 'report' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              onClick={() => handleNav('report')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all mx-0.5 ${isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'}`}
             >
-              Latest Report
+              {t('latestReport')}
             </button>
           )}
         </nav>
 
-        <div className="flex items-center space-x-3">
-          <div className="hidden lg:flex flex-col items-end mr-4">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">System Status</span>
-            <span className="text-[10px] font-bold text-emerald-500 uppercase flex items-center">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span>
-              Operational
-            </span>
+        {/* Right Section: Settings/Profile */}
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+          
+          {/* Dashboard Button (Desktop) */}
+          <button 
+              onClick={() => handleNav('dashboard')}
+              className={`
+                hidden lg:flex items-center space-x-2 px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-wider border transition-all
+                ${isHighContrast 
+                  ? 'border-black text-black hover:bg-black hover:text-[#FFFDD0]' 
+                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-50 dark:bg-slate-800'
+                }
+                ${currentView === 'dashboard' ? (isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-600 dark:text-blue-400') : ''}
+              `}
+          >
+              <i className="fas fa-hospital-user text-sm"></i>
+              <span>Dash</span>
+          </button>
+
+          {/* Compact Language Selector Dropdown */}
+          <div className="relative" ref={langMenuRef}>
+            <button
+              onClick={() => { triggerHaptic(); setIsLangOpen(!isLangOpen); }}
+              className={`
+                flex items-center space-x-1 pl-3 pr-2 py-2 rounded-lg border transition-all
+                ${isHighContrast 
+                  ? 'border-black bg-white text-black' 
+                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }
+              `}
+            >
+              <span className="text-xs font-black tracking-wider">{currentLang.label}</span>
+              <i className={`fas fa-chevron-down text-[10px] transition-transform duration-200 ${isLangOpen ? 'rotate-180' : ''} opacity-60`}></i>
+            </button>
+
+            {/* Dropdown Menu */}
+            {isLangOpen && (
+              <div className={`
+                absolute top-full right-0 mt-2 w-32 rounded-xl border shadow-xl overflow-hidden py-1 z-50 animate-in fade-in zoom-in-95 duration-200
+                ${isHighContrast 
+                  ? 'bg-white border-black' 
+                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'
+                }
+              `}>
+                {languages.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => {
+                      setLang(l.code);
+                      setIsLangOpen(false);
+                      triggerHaptic();
+                    }}
+                    className={`
+                      w-full px-4 py-2.5 text-left text-xs font-bold flex items-center justify-between transition-colors
+                      ${lang === l.code 
+                        ? (isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400') 
+                        : (isHighContrast ? 'text-black hover:bg-gray-100' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800')
+                      }
+                    `}
+                  >
+                    <span>{l.name}</span>
+                    {lang === l.code && <i className="fas fa-check text-[10px]"></i>}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <button className="bg-slate-900 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-800 transition-colors shadow-lg">
-            <i className="fas fa-user-md text-sm"></i>
+
+          <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 hidden sm:block"></div>
+
+          {/* Theme Toggle */}
+          <button 
+            onClick={() => { triggerHaptic(); toggleTheme(); }}
+            className={`
+              w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all border
+              ${isHighContrast 
+                ? 'opacity-50 cursor-not-allowed bg-gray-200 border-gray-400 text-gray-500' 
+                : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-yellow-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 shadow-sm'
+              }
+            `}
+            disabled={isHighContrast}
+            aria-label="Toggle Dark Mode"
+          >
+            <i className={`fas ${theme === 'dark' ? 'fa-moon' : 'fa-sun'} text-sm md:text-base`}></i>
+          </button>
+
+          {/* Contrast Toggle */}
+          <button 
+            onClick={handleContrastToggle}
+            className={`
+              w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all border
+              ${isHighContrast 
+                ? 'bg-black text-[#FFFDD0] border-black shadow-none' 
+                : 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-slate-200 dark:border-slate-700 hover:bg-slate-50 shadow-sm'
+              }
+            `}
+            aria-label="Toggle High Contrast"
+          >
+            <i className="fas fa-adjust text-sm md:text-base"></i>
           </button>
         </div>
       </div>

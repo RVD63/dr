@@ -3,12 +3,55 @@ import React, { useState, useCallback, useEffect } from 'react';
 import Header from './components/Header';
 import Disclaimer from './components/Disclaimer';
 import ImageUploader from './components/ImageUploader';
+import VideoUploader from './components/VideoUploader';
 import AnalysisResults from './components/AnalysisResults';
+import VideoAnalysisResults from './components/VideoAnalysisResults';
 import HomeView from './components/HomeView';
 import DashboardView from './components/DashboardView';
 import AnalysisLoading from './components/AnalysisLoading';
-import { AnalysisState, ViewType, HistoricalResult } from './types';
-import { analyzeRetinalImage } from './services/geminiService';
+import ChatAssistant from './components/ChatAssistant';
+import { AnalysisState, ViewType, HistoricalResult, Language } from './types';
+import { analyzeRetinalImage, analyzeRetinalVideo } from './services/geminiService';
+import { translations } from './utils/translations';
+
+const BottomNav: React.FC<{
+  currentView: ViewType;
+  setView: (view: ViewType) => void;
+  isHighContrast: boolean;
+  t: (key: string) => string;
+}> = ({ currentView, setView, isHighContrast, t }) => {
+  const navItems = [
+    { id: 'home', icon: 'fa-home', label: t('home') },
+    { id: 'upload', icon: 'fa-camera', label: t('diagnosis') },
+    { id: 'dashboard', icon: 'fa-file-medical', label: t('dashboard').split(' ')[0] },
+    { id: 'chat', icon: 'fa-comments', label: t('assistant') },
+  ];
+
+  return (
+    <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-50 border-t transition-colors duration-300 print:hidden pb-safe ${
+      isHighContrast 
+        ? 'bg-white border-black' 
+        : 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-slate-200 dark:border-slate-800'
+    }`}>
+      <div className="flex justify-around items-center h-16">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setView(item.id as ViewType)}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 active:scale-90 transition-transform p-1 ${
+              currentView === item.id
+                ? (isHighContrast ? 'text-black' : 'text-blue-600 dark:text-blue-400')
+                : (isHighContrast ? 'text-gray-400' : 'text-slate-400 dark:text-slate-500')
+            }`}
+          >
+            <i className={`fas ${item.icon} text-xl ${currentView === item.id ? 'transform scale-110' : ''} transition-transform`}></i>
+            <span className="text-[9px] font-black uppercase tracking-wider">{item.label}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
+};
 
 const App: React.FC = () => {
   const [state, setState] = useState<AnalysisState>(() => {
@@ -18,19 +61,60 @@ const App: React.FC = () => {
       isLoading: false,
       isPreprocessing: false,
       result: null,
+      videoResult: null,
       error: null,
       imagePreview: null,
+      videoPreview: null,
       originalImage: null,
       history: savedHistory ? JSON.parse(savedHistory) : [],
     };
   });
 
+  const [isHighContrast, setIsHighContrast] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [lang, setLang] = useState<Language>('en');
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('retina_theme') as 'light' | 'dark' | null;
+    if (savedTheme) setTheme(savedTheme);
+    const savedLang = localStorage.getItem('retina_lang') as Language | null;
+    if (savedLang) setLang(savedLang);
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('retina_history', JSON.stringify(state.history));
   }, [state.history]);
 
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('retina_theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem('retina_lang', lang);
+  }, [lang]);
+
+  const t = (key: string): string => {
+    return translations[lang][key] || key;
+  };
+
   const setView = (view: ViewType) => {
-    setState(prev => ({ ...prev, view }));
+    setState(prev => ({ 
+      ...prev, 
+      view,
+      error: null,
+    }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const toggleContrast = () => setIsHighContrast(!isHighContrast);
+  
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
   const preprocessImage = (base64: string): Promise<string> => {
@@ -58,7 +142,7 @@ const App: React.FC = () => {
         canvas.width = width;
         canvas.height = height;
         ctx.drawImage(img, 0, 0, width, height);
-        ctx.filter = 'contrast(1.25) brightness(1.05) saturate(1.1)';
+        ctx.filter = 'contrast(1.4) brightness(1.1) saturate(1.2)';
         ctx.drawImage(canvas, 0, 0);
         ctx.filter = 'none';
         resolve(canvas.toDataURL('image/jpeg', 0.9));
@@ -73,7 +157,7 @@ const App: React.FC = () => {
       isPreprocessing: true,
       error: null, 
       originalImage: base64,
-      imagePreview: base64, // Show original during preprocessing
+      imagePreview: base64, 
       result: null 
     }));
 
@@ -87,7 +171,7 @@ const App: React.FC = () => {
     }));
 
     try {
-      const result = await analyzeRetinalImage(enhancedImage);
+      const result = await analyzeRetinalImage(enhancedImage, lang);
       
       const historicalItem: HistoricalResult = {
         id: Math.random().toString(36).substr(2, 6),
@@ -110,13 +194,40 @@ const App: React.FC = () => {
         error: err.message || "An unexpected error occurred." 
       }));
     }
-  }, []);
+  }, [lang]);
+
+  const handleVideoSelected = useCallback(async (base64: string) => {
+    setState(prev => ({
+      ...prev,
+      isLoading: true,
+      error: null,
+      videoPreview: base64,
+      imagePreview: null,
+      videoResult: null
+    }));
+
+    try {
+      const result = await analyzeRetinalVideo(base64, lang);
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        videoResult: result
+      }));
+    } catch (err: any) {
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: err.message || "Video analysis failed."
+      }));
+    }
+  }, [lang]);
 
   const selectHistoricalResult = (item: HistoricalResult) => {
     setState(prev => ({
       ...prev,
       result: item.result,
       imagePreview: item.imagePreview,
+      originalImage: item.imagePreview, 
       view: 'report'
     }));
   };
@@ -133,22 +244,47 @@ const App: React.FC = () => {
       originalImage: null,
     }));
   };
+  
+  const resetVideoAnalysis = () => {
+    setState(prev => ({
+      ...prev,
+      view: 'video',
+      isLoading: false,
+      videoResult: null,
+      videoPreview: null,
+      error: null
+    }));
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50/50">
+    <div className={`min-h-screen flex flex-col transition-colors duration-500 
+      ${isHighContrast 
+        ? 'bg-[#FFFDD0]' 
+        : 'bg-slate-50/50 dark:bg-slate-950'
+      }`}>
       <Header 
         currentView={state.view} 
         setView={setView} 
         hasResult={!!state.result} 
+        isHighContrast={isHighContrast}
+        toggleContrast={toggleContrast}
+        theme={theme}
+        toggleTheme={toggleTheme}
+        lang={lang}
+        setLang={setLang}
+        t={t}
       />
       
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+      {/* Increased bottom padding for mobile to account for fixed bottom nav + safe area */}
+      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-10 w-full pb-32 md:pb-10">
         <div className="max-w-6xl mx-auto">
           
-          <Disclaimer />
+          <div className="print:hidden">
+            <Disclaimer />
+          </div>
 
           {state.view === 'home' && (
-            <HomeView onStart={() => setView('upload')} />
+            <HomeView onStart={() => setView('upload')} isHighContrast={isHighContrast} t={t} />
           )}
 
           {state.view === 'dashboard' && (
@@ -159,14 +295,36 @@ const App: React.FC = () => {
             />
           )}
 
+          {state.view === 'chat' && (
+             <ChatAssistant isHighContrast={isHighContrast} lang={lang} t={t} />
+          )}
+
           {state.view === 'upload' && !state.isLoading && !state.isPreprocessing && !state.error && (
             <div className="animate-in slide-in-from-bottom-8 duration-700">
-              <div className="text-center mb-12">
-                <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-4">Diagnostic Center</h2>
-                <p className="text-slate-500 font-medium">Upload a patient's fundus image to initiate the AI analysis pipeline.</p>
+              <div className="text-center mb-8 md:mb-12">
+                <h2 className={`text-3xl md:text-5xl font-black tracking-tight mb-4 md:mb-6 ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{t('appTitle')} {t('diagnosis')}</h2>
+                <p className={`text-base md:text-xl font-medium ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}>
+                  {t('uploadDesc')}
+                </p>
               </div>
-              <div className="bg-white p-4 rounded-[2.5rem] shadow-2xl shadow-blue-100 border border-slate-100">
-                <ImageUploader onImageSelected={handleImageSelected} disabled={state.isLoading} />
+              <div className={`p-4 rounded-[2.5rem] shadow-2xl ${
+                isHighContrast 
+                  ? 'bg-white border-2 border-black' 
+                  : 'bg-white dark:bg-slate-900 shadow-blue-100 dark:shadow-blue-900/20 border border-slate-100 dark:border-slate-800'
+              }`}>
+                <ImageUploader onImageSelected={handleImageSelected} disabled={state.isLoading} isHighContrast={isHighContrast} t={t} />
+              </div>
+            </div>
+          )}
+
+          {state.view === 'video' && !state.isLoading && !state.videoResult && !state.error && (
+            <div className="animate-in slide-in-from-bottom-8 duration-700">
+              <div className="text-center mb-8 md:mb-12">
+                <h2 className={`text-3xl md:text-5xl font-black tracking-tight mb-4 md:mb-6 ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{t('video')} Analysis</h2>
+                <p className={`text-base md:text-xl font-medium ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}>Upload OCT or Fundus videos for dynamic pathology detection.</p>
+              </div>
+              <div className={`p-4 rounded-[2.5rem] shadow-2xl ${isHighContrast ? 'bg-white border-2 border-black' : 'bg-white dark:bg-slate-900 shadow-purple-100 dark:shadow-purple-900/20 border border-slate-100 dark:border-slate-800'}`}>
+                <VideoUploader onVideoSelected={handleVideoSelected} disabled={state.isLoading} />
               </div>
             </div>
           )}
@@ -175,19 +333,24 @@ const App: React.FC = () => {
             <AnalysisLoading 
               isPreprocessing={state.isPreprocessing} 
               imagePreview={state.imagePreview} 
+              isHighContrast={isHighContrast}
             />
           )}
 
           {state.error && (
-            <div className="bg-white border border-rose-100 rounded-[2.5rem] p-16 text-center shadow-2xl shadow-rose-100 animate-in zoom-in-95">
-              <div className="bg-rose-50 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-inner">
-                <i className="fas fa-heart-crack text-rose-500 text-4xl"></i>
+            <div className={`border rounded-[2.5rem] p-6 md:p-16 text-center shadow-2xl animate-in zoom-in-95 ${
+              isHighContrast 
+                ? 'bg-white border-black text-black' 
+                : 'bg-white dark:bg-slate-900 border-rose-100 dark:border-rose-900/50 shadow-rose-100 dark:shadow-none'
+            }`}>
+              <div className={`w-16 h-16 md:w-24 md:h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 md:mb-10 shadow-inner ${isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-rose-50 dark:bg-rose-900/50 text-rose-500'}`}>
+                <i className="fas fa-heart-crack text-2xl md:text-4xl"></i>
               </div>
-              <h3 className="text-4xl font-black text-slate-900 mb-4 tracking-tighter">Analysis Interrupted</h3>
-              <p className="text-slate-500 text-xl font-medium mb-12 max-w-md mx-auto">{state.error}</p>
+              <h3 className={`text-2xl md:text-4xl font-black mb-4 tracking-tighter ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>Analysis Interrupted</h3>
+              <p className={`text-base md:text-xl font-medium mb-8 md:mb-12 max-w-md mx-auto ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}>{state.error}</p>
               <button 
-                onClick={resetAnalysis}
-                className="bg-slate-900 text-white px-12 py-5 rounded-2xl font-black hover:bg-slate-800 transition-all shadow-xl hover:shadow-slate-200 uppercase tracking-widest text-sm"
+                onClick={state.view === 'video' ? resetVideoAnalysis : resetAnalysis}
+                className={`w-full md:w-auto px-10 py-5 rounded-2xl font-black transition-all shadow-xl uppercase tracking-widest text-sm ${isHighContrast ? 'bg-black text-[#FFFDD0] border-2 border-black hover:bg-white hover:text-black' : 'bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500'}`}
               >
                 Reset & Restart Pipeline
               </button>
@@ -196,14 +359,38 @@ const App: React.FC = () => {
 
           {state.view === 'report' && state.result && state.imagePreview && (
             <div className="space-y-10">
-              <AnalysisResults result={state.result} imagePreview={state.imagePreview} />
-              <div className="flex justify-center pb-20">
+              <AnalysisResults 
+                result={state.result} 
+                imagePreview={state.imagePreview} 
+                originalImage={state.originalImage || state.imagePreview}
+                isHighContrast={isHighContrast}
+              />
+              <div className="flex justify-center pb-20 print:hidden">
                 <button 
                   onClick={resetAnalysis}
-                  className="flex items-center space-x-4 bg-slate-900 text-white px-12 py-5 rounded-2xl font-black hover:bg-slate-800 transition-all shadow-2xl uppercase tracking-widest text-sm group"
+                  className={`flex items-center space-x-4 px-12 py-5 rounded-2xl font-black transition-all shadow-2xl uppercase tracking-widest text-sm group ${isHighContrast ? 'bg-black text-[#FFFDD0] border-2 border-black hover:bg-white hover:text-black' : 'bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500'}`}
                 >
                   <i className="fas fa-plus-circle group-hover:rotate-90 transition-transform"></i>
-                  <span>New Clinical Session</span>
+                  <span>{t('newScan')}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {state.view === 'video' && state.videoResult && state.videoPreview && (
+            <div className="space-y-10">
+              <VideoAnalysisResults 
+                result={state.videoResult}
+                videoPreview={state.videoPreview}
+                isHighContrast={isHighContrast}
+              />
+              <div className="flex justify-center pb-20">
+                <button 
+                  onClick={resetVideoAnalysis}
+                  className={`flex items-center space-x-4 px-12 py-5 rounded-2xl font-black transition-all shadow-2xl uppercase tracking-widest text-sm group ${isHighContrast ? 'bg-black text-[#FFFDD0] border-2 border-black hover:bg-white hover:text-black' : 'bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500'}`}
+                >
+                  <i className="fas fa-video group-hover:text-purple-400 transition-colors"></i>
+                  <span>Analyze Another Video</span>
                 </button>
               </div>
             </div>
@@ -211,20 +398,22 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <footer className="bg-white border-t border-slate-100 py-16 mt-auto">
+      <BottomNav currentView={state.view} setView={setView} isHighContrast={isHighContrast} t={t} />
+
+      <footer className={`hidden md:block border-t py-16 mt-auto print:hidden ${isHighContrast ? 'bg-white border-black' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'}`}>
         <div className="max-w-7xl mx-auto px-4 flex flex-col items-center">
            <div className="flex items-center space-x-3 mb-8">
-              <div className="bg-slate-900 p-2 rounded-xl">
-                 <i className="fas fa-eye text-white text-xl"></i>
+              <div className={`p-2 rounded-xl ${isHighContrast ? 'bg-black' : 'bg-slate-900 dark:bg-white'}`}>
+                 <i className={`fas fa-eye text-xl ${isHighContrast ? 'text-[#FFFDD0]' : 'text-white dark:text-slate-900'}`}></i>
               </div>
-              <span className="text-2xl font-black text-slate-900 tracking-tighter uppercase">RetinaVision <span className="text-blue-600">Enterprise</span></span>
+              <span className={`text-2xl font-black tracking-tighter uppercase ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{t('appTitle')} <span className={isHighContrast ? 'text-black' : 'text-blue-600 dark:text-blue-400'}>{t('appSubtitle')}</span></span>
            </div>
-           <p className="text-sm text-slate-400 font-medium mb-8">Developed for high-throughput clinical ophthalmology environments.</p>
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">
-              <span className="hover:text-blue-600 cursor-pointer">HIPAA Secured</span>
-              <span className="hover:text-blue-600 cursor-pointer">GDPR Privacy</span>
-              <span className="hover:text-blue-600 cursor-pointer">Cloud-Native</span>
-              <span className="hover:text-blue-600 cursor-pointer">FDA Certified</span>
+           <p className={`text-sm font-medium mb-8 ${isHighContrast ? 'text-black' : 'text-slate-400 dark:text-slate-500'}`}>Developed for high-throughput clinical ophthalmology environments.</p>
+           <div className={`grid grid-cols-2 md:grid-cols-4 gap-12 text-[10px] font-bold uppercase tracking-[0.3em] ${isHighContrast ? 'text-black' : 'text-slate-400 dark:text-slate-500'}`}>
+              <span className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">HIPAA Secured</span>
+              <span className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">GDPR Privacy</span>
+              <span className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">Cloud-Native</span>
+              <span className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">FDA Certified</span>
            </div>
         </div>
       </footer>

@@ -1,5 +1,5 @@
 {
-  "name": "RetinaVision AI",
+  "name": "Netra-Vision AI",
   "description": "An advanced AI-powered ophthalmology assistant designed to analyze retinal fundus images for signs of Diabetic Retinopathy, providing detection, severity grading, and key findings.",
   "requestFramePermissions": [
     "camera"
