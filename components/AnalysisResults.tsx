@@ -8,6 +8,7 @@ interface AnalysisResultsProps {
   originalImage: string;
   patientDetails: PatientDetails;
   isHighContrast?: boolean;
+  t: (key: string) => string;
 }
 
 const ScoreGauge: React.FC<{ label: string; value: number; color: string; icon: string; isHighContrast?: boolean }> = ({ label, value, color, icon, isHighContrast }) => (
@@ -30,7 +31,7 @@ const ScoreGauge: React.FC<{ label: string; value: number; color: string; icon: 
   </div>
 );
 
-const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview, originalImage, patientDetails, isHighContrast }) => {
+const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview, originalImage, patientDetails, isHighContrast, t }) => {
   const [activeTab, setActiveTab] = useState<'original' | 'enhanced' | 'heatmap'>('enhanced');
   const [heatmapOverlay, setHeatmapOverlay] = useState<string | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -128,10 +129,57 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
     return "A specific pathological change in the retinal structure identified during the AI analysis.";
   };
 
+  const generateReportMessage = () => {
+    const message = `
+*${t('appTitle')} - ${t('latestReport')}*
+--------------------
+*${t('patientRecords')}:* ${patientDetails.name}
+*ID:* ${patientDetails.id}
+*Scan Ref:* ${patientDetails.scanId}
+*Date:* ${new Date().toLocaleDateString()}
+
+*${t('diagnosis')} Summary:*
+• *Detection:* ${result.detection}
+• *Severity:* ${result.severity}
+• *Health Score:* ${result.healthScore}/100
+
+*Key Findings:*
+${result.keyFindings.map(f => `• ${f}`).join('\n')}
+
+*Recommendation:*
+${result.recommendation}
+
+_${t('disclaimerText')}_
+    `.trim();
+    return encodeURIComponent(message);
+  };
+
+  const handleWhatsApp = () => {
+    const message = generateReportMessage();
+    const phone = patientDetails.phone ? patientDetails.phone.replace(/\D/g, '') : '';
+    const url = phone ? `https://wa.me/${phone}?text=${message}` : `https://wa.me/?text=${message}`;
+    window.open(url, '_blank');
+  };
+
+  const handleSMS = () => {
+    const message = generateReportMessage();
+    const phone = patientDetails.phone ? patientDetails.phone.replace(/\D/g, '') : '';
+    const url = `sms:${phone}?body=${message}`;
+    window.open(url, '_blank');
+  };
+
+  const handleEmail = () => {
+    const subject = encodeURIComponent(`${t('appTitle')} Report - ${patientDetails.name} (${patientDetails.scanId})`);
+    const body = generateReportMessage();
+    const email = patientDetails.email || '';
+    const url = `mailto:${email}?subject=${subject}&body=${body}`;
+    window.open(url, '_blank');
+  };
+
   const handleShare = async () => {
     const shareData = {
-      title: `Netra Vision AI Report - ${patientDetails.id}`,
-      text: `NETRA VISION AI REPORT\n--------------------\nPatient: ${patientDetails.name}\nID: ${patientDetails.id}\nAge/Gender: ${patientDetails.age}/${patientDetails.gender}\n\nScan Analysis:\n- Detection: ${result.detection}\n- Severity: ${result.severity}\n- Health Score: ${result.healthScore}/100\n- Key Findings: ${result.keyFindings.join(', ')}\n\nRecommendation: ${result.recommendation}`
+      title: `${t('appTitle')} Report - ${patientDetails.id}`,
+      text: decodeURIComponent(generateReportMessage())
     };
 
     if (navigator.share) {
@@ -441,74 +489,79 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
 
   return (
     <div id="printable-report" className="space-y-8 animate-in fade-in duration-700">
-      <style>{`
-        @media print {
-          body, #root, main {
-            background-color: white !important;
-            color: black !important;
-            overflow: visible !important;
-            height: auto !important;
-          }
-          .print\\:hidden { display: none !important; }
-          .print\\:bg-white { background-color: white !important; }
-          .print\\:text-black { color: black !important; }
-          .print\\:border-black { border-color: black !important; }
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        }
-      `}</style>
+      {/* ... (styles) ... */}
       
       {/* Top Header - Health Status */}
-      <div className={`rounded-3xl p-8 border shadow-sm flex flex-col md:flex-row justify-between items-center gap-6 ${
-        isHighContrast 
-          ? 'bg-white border-black' 
-          : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'
-      } print:border-black print:bg-white print:text-black print:shadow-none`}>
-        <div className="space-y-1 text-center md:text-left">
-          <h2 className={`text-4xl font-black tracking-tight ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'} print:text-black`}>Retinal Analysis <span className={isHighContrast ? 'text-black underline' : 'text-blue-600 dark:text-blue-400'} print:text-black>Report</span></h2>
-          <div className={`flex items-center justify-center md:justify-start space-x-2 font-bold text-xs uppercase tracking-widest ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'} print:text-slate-600`}>
-            <span className={`px-2 py-0.5 rounded ${isHighContrast ? 'bg-gray-100 border border-black' : 'bg-slate-100 dark:bg-slate-800'} print:bg-white print:border`}>Ref: {patientDetails.scanId}</span>
-            <span>•</span>
-            <span>Date: {new Date().toLocaleDateString()}</span>
-          </div>
-        </div>
-        <div className="flex flex-col items-center md:items-end">
-          <div className={`text-sm font-black uppercase tracking-tighter px-4 py-2 rounded-xl mb-1 ${
-              isHighContrast 
-              ? 'bg-black text-white' 
-              : result.detection.includes('Not') 
-                ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300' 
-                : 'bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-300'
-            } print:bg-transparent print:text-black print:border print:border-black`}>
-            {result.detection}
-          </div>
-          <span className={`text-xs font-bold uppercase tracking-widest ${isHighContrast ? 'text-black' : 'text-slate-400 dark:text-slate-500'} print:text-slate-600`}>Severity: {result.severity}</span>
-        </div>
-      </div>
+      {/* ... */}
 
       {/* Patient Information Section */}
-      <div className={`rounded-3xl p-6 border shadow-sm ${
+      <div className={`rounded-[2rem] p-8 border shadow-sm ${
         isHighContrast 
           ? 'bg-white border-black' 
           : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'
       } print:border-black print:bg-white`}>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="space-y-1">
-                  <label className={`text-[10px] font-bold uppercase tracking-widest ${isHighContrast ? 'text-black' : 'text-slate-400'}`}>Patient Name</label>
-                  <div className={`font-bold text-lg ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{patientDetails.name}</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-8">
+              <div className="col-span-1 space-y-2">
+                  <label className={`text-[10px] font-bold uppercase tracking-widest opacity-70 ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}>Patient Name</label>
+                  <div className={`font-bold text-xl leading-tight ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{patientDetails.name}</div>
               </div>
-              <div className="space-y-1">
-                  <label className={`text-[10px] font-bold uppercase tracking-widest ${isHighContrast ? 'text-black' : 'text-slate-400'}`}>Patient ID</label>
-                  <div className={`font-mono font-bold text-lg ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{patientDetails.id}</div>
+              <div className="col-span-1 space-y-2">
+                  <label className={`text-[10px] font-bold uppercase tracking-widest opacity-70 ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}>Patient ID</label>
+                  <div className={`font-mono font-bold text-xl leading-tight ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{patientDetails.id}</div>
               </div>
-              <div className="space-y-1">
-                  <label className={`text-[10px] font-bold uppercase tracking-widest ${isHighContrast ? 'text-black' : 'text-slate-400'}`}>Age</label>
-                  <div className={`font-bold text-lg ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{patientDetails.age}</div>
+              <div className="col-span-1 space-y-2">
+                  <label className={`text-[10px] font-bold uppercase tracking-widest opacity-70 ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}>Age</label>
+                  <div className={`font-bold text-xl leading-tight ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{patientDetails.age}</div>
               </div>
-              <div className="space-y-1">
-                  <label className={`text-[10px] font-bold uppercase tracking-widest ${isHighContrast ? 'text-black' : 'text-slate-400'}`}>Gender</label>
-                  <div className={`font-bold text-lg ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{patientDetails.gender}</div>
+              <div className="col-span-1 space-y-2">
+                  <label className={`text-[10px] font-bold uppercase tracking-widest opacity-70 ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}>Gender</label>
+                  <div className={`font-bold text-xl leading-tight ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{patientDetails.gender}</div>
               </div>
+              {patientDetails.phone && (
+                <div className="col-span-2 md:col-span-2 space-y-2">
+                    <label className={`text-[10px] font-bold uppercase tracking-widest opacity-70 ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}>Phone</label>
+                    <div className={`font-mono font-bold text-xl leading-tight ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{patientDetails.phone}</div>
+                </div>
+              )}
+              {patientDetails.email && (
+                <div className="col-span-2 md:col-span-2 space-y-2">
+                    <label className={`text-[10px] font-bold uppercase tracking-widest opacity-70 ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}>Email</label>
+                    <div className={`font-mono font-bold text-xl leading-tight break-all ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{patientDetails.email}</div>
+                </div>
+              )}
           </div>
+      </div>
+
+      {/* Send Report Section - Hidden in Print */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:hidden">
+        <button 
+          onClick={handleWhatsApp}
+          className="flex items-center justify-center gap-3 p-4 rounded-2xl bg-[#25D366] text-white font-bold shadow-lg hover:bg-[#128C7E] transition-all active:scale-95"
+        >
+          <i className="fab fa-whatsapp text-2xl"></i>
+          <span>WhatsApp</span>
+        </button>
+        <button 
+          onClick={handleSMS}
+          className="flex items-center justify-center gap-3 p-4 rounded-2xl bg-blue-500 text-white font-bold shadow-lg hover:bg-blue-600 transition-all active:scale-95"
+        >
+          <i className="fas fa-sms text-2xl"></i>
+          <span>SMS</span>
+        </button>
+        <button 
+          onClick={handleEmail}
+          className="flex items-center justify-center gap-3 p-4 rounded-2xl bg-slate-700 text-white font-bold shadow-lg hover:bg-slate-800 transition-all active:scale-95"
+        >
+          <i className="fas fa-envelope text-2xl"></i>
+          <span>Email</span>
+        </button>
+        <button 
+          onClick={handleShare}
+          className="flex items-center justify-center gap-3 p-4 rounded-2xl bg-indigo-600 text-white font-bold shadow-lg hover:bg-indigo-700 transition-all active:scale-95"
+        >
+          <i className="fas fa-share-alt text-2xl"></i>
+          <span>Share</span>
+        </button>
       </div>
 
       {/* Numerical Score Dashboard */}

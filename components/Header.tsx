@@ -2,14 +2,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ViewType, Language } from '../types';
 import Logo from './Logo';
-import { Sun, Moon, Contrast } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 
 interface HeaderProps {
   currentView: ViewType;
   setView: (view: ViewType) => void;
   hasResult: boolean;
   isHighContrast: boolean;
-  toggleContrast: () => void;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   lang: Language;
@@ -18,7 +17,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-  currentView, setView, hasResult, isHighContrast, toggleContrast,
+  currentView, setView, hasResult, isHighContrast,
   theme, toggleTheme, lang, setLang, t 
 }) => {
   const [isLangOpen, setIsLangOpen] = useState(false);
@@ -31,11 +30,6 @@ const Header: React.FC<HeaderProps> = ({
   const handleNav = (view: ViewType) => {
     triggerHaptic();
     setView(view);
-  };
-
-  const handleContrastToggle = () => {
-    triggerHaptic();
-    toggleContrast();
   };
 
   const languages: { code: Language; label: string; name: string }[] = [
@@ -184,21 +178,6 @@ const Header: React.FC<HeaderProps> = ({
             aria-label={t('toggleTheme')}
           >
             {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
-
-          {/* Contrast Toggle */}
-          <button 
-            onClick={handleContrastToggle}
-            className={`
-              w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all border
-              ${isHighContrast 
-                ? 'bg-black text-white border-black shadow-none' 
-                : 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-slate-200 dark:border-slate-700 hover:bg-slate-50 shadow-sm'
-              }
-            `}
-            aria-label={t('toggleContrast')}
-          >
-            <Contrast size={18} />
           </button>
         </div>
       </div>

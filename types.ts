@@ -26,6 +26,8 @@ export interface PatientDetails {
   age: string;
   gender: string;
   scanId: string;
+  phone?: string;
+  email?: string;
 }
 
 export interface AnalysisResult {

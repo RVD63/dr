@@ -72,7 +72,6 @@ const App: React.FC = () => {
     };
   });
 
-  const [isHighContrast, setIsHighContrast] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [lang, setLang] = useState<Language>('en');
 
@@ -112,8 +111,6 @@ const App: React.FC = () => {
     }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  const toggleContrast = () => setIsHighContrast(!isHighContrast);
   
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -263,17 +260,12 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors duration-500 
-      ${isHighContrast 
-        ? 'bg-white' 
-        : 'bg-slate-50/50 dark:bg-slate-950'
-      }`}>
+    <div className="min-h-screen flex flex-col transition-colors duration-500 bg-slate-50/50 dark:bg-slate-950">
       <Header 
         currentView={state.view} 
         setView={setView} 
         hasResult={!!state.result} 
-        isHighContrast={isHighContrast}
-        toggleContrast={toggleContrast}
+        isHighContrast={false}
         theme={theme}
         toggleTheme={toggleTheme}
         lang={lang}
@@ -292,7 +284,7 @@ const App: React.FC = () => {
           )}
 
           {state.view === 'home' && (
-            <HomeView onStart={() => setView('upload')} isHighContrast={isHighContrast} t={t} />
+            <HomeView onStart={() => setView('upload')} isHighContrast={false} t={t} />
           )}
 
           {state.view === 'dashboard' && (
@@ -304,23 +296,19 @@ const App: React.FC = () => {
           )}
 
           {state.view === 'chat' && (
-             <ChatAssistant isHighContrast={isHighContrast} lang={lang} t={t} />
+             <ChatAssistant isHighContrast={false} lang={lang} t={t} />
           )}
 
           {state.view === 'upload' && !state.isLoading && !state.isPreprocessing && !state.error && (
             <div className="animate-in slide-in-from-bottom-8 duration-700">
               <div className="text-center mb-8 md:mb-12">
-                <h2 className={`text-3xl md:text-5xl font-black tracking-tight mb-4 md:mb-6 ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{t('appTitle')} {t('diagnosis')}</h2>
-                <p className={`text-base md:text-xl font-medium ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}>
+                <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4 md:mb-6 text-slate-900 dark:text-white">{t('appTitle')} {t('diagnosis')}</h2>
+                <p className="text-base md:text-xl font-medium text-slate-500 dark:text-slate-400">
                   {t('uploadDesc')}
                 </p>
               </div>
-              <div className={`p-4 rounded-[2.5rem] shadow-2xl ${
-                isHighContrast 
-                  ? 'bg-white border-2 border-black' 
-                  : 'bg-white dark:bg-slate-900 shadow-blue-100 dark:shadow-blue-900/20 border border-slate-100 dark:border-slate-800'
-              }`}>
-                <ImageUploader onImageSelected={handleImageSelected} disabled={state.isLoading} isHighContrast={isHighContrast} t={t} />
+              <div className="p-4 rounded-[2.5rem] shadow-2xl bg-white dark:bg-slate-900 shadow-blue-100 dark:shadow-blue-900/20 border border-slate-100 dark:border-slate-800">
+                <ImageUploader onImageSelected={handleImageSelected} disabled={state.isLoading} isHighContrast={false} t={t} />
               </div>
             </div>
           )}
@@ -328,10 +316,10 @@ const App: React.FC = () => {
           {state.view === 'video' && !state.isLoading && !state.videoResult && !state.error && (
             <div className="animate-in slide-in-from-bottom-8 duration-700">
               <div className="text-center mb-8 md:mb-12">
-                <h2 className={`text-3xl md:text-5xl font-black tracking-tight mb-4 md:mb-6 ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{t('video')} Analysis</h2>
-                <p className={`text-base md:text-xl font-medium ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}>Upload OCT or Fundus videos for dynamic pathology detection.</p>
+                <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4 md:mb-6 text-slate-900 dark:text-white">{t('video')} Analysis</h2>
+                <p className="text-base md:text-xl font-medium text-slate-500 dark:text-slate-400">Upload OCT or Fundus videos for dynamic pathology detection.</p>
               </div>
-              <div className={`p-4 rounded-[2.5rem] shadow-2xl ${isHighContrast ? 'bg-white border-2 border-black' : 'bg-white dark:bg-slate-900 shadow-purple-100 dark:shadow-purple-900/20 border border-slate-100 dark:border-slate-800'}`}>
+              <div className="p-4 rounded-[2.5rem] shadow-2xl bg-white dark:bg-slate-900 shadow-purple-100 dark:shadow-purple-900/20 border border-slate-100 dark:border-slate-800">
                 <VideoUploader onVideoSelected={handleVideoSelected} disabled={state.isLoading} />
               </div>
             </div>
@@ -341,24 +329,20 @@ const App: React.FC = () => {
             <AnalysisLoading 
               isPreprocessing={state.isPreprocessing} 
               imagePreview={state.imagePreview} 
-              isHighContrast={isHighContrast}
+              isHighContrast={false}
             />
           )}
 
           {state.error && (
-            <div className={`border rounded-[2.5rem] p-6 md:p-16 text-center shadow-2xl animate-in zoom-in-95 ${
-              isHighContrast 
-                ? 'bg-white border-black text-black' 
-                : 'bg-white dark:bg-slate-900 border-rose-100 dark:border-rose-900/50 shadow-rose-100 dark:shadow-none'
-            }`}>
-              <div className={`w-16 h-16 md:w-24 md:h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 md:mb-10 shadow-inner ${isHighContrast ? 'bg-black text-white' : 'bg-rose-50 dark:bg-rose-900/50 text-rose-500'}`}>
+            <div className="border rounded-[2.5rem] p-6 md:p-16 text-center shadow-2xl animate-in zoom-in-95 bg-white dark:bg-slate-900 border-rose-100 dark:border-rose-900/50 shadow-rose-100 dark:shadow-none">
+              <div className="w-16 h-16 md:w-24 md:h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 md:mb-10 shadow-inner bg-rose-50 dark:bg-rose-900/50 text-rose-500">
                 <i className="fas fa-heart-crack text-2xl md:text-4xl"></i>
               </div>
-              <h3 className={`text-2xl md:text-4xl font-black mb-4 tracking-tighter ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>Analysis Interrupted</h3>
-              <p className={`text-base md:text-xl font-medium mb-8 md:mb-12 max-w-md mx-auto ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}>{state.error}</p>
+              <h3 className="text-2xl md:text-4xl font-black mb-4 tracking-tighter text-slate-900 dark:text-white">Analysis Interrupted</h3>
+              <p className="text-base md:text-xl font-medium mb-8 md:mb-12 max-w-md mx-auto text-slate-500 dark:text-slate-400">{state.error}</p>
               <button 
                 onClick={state.view === 'video' ? resetVideoAnalysis : resetAnalysis}
-                className={`w-full md:w-auto px-10 py-5 rounded-2xl font-black transition-all shadow-xl uppercase tracking-widest text-sm ${isHighContrast ? 'bg-black text-white border-2 border-black hover:bg-white hover:text-black' : 'bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500'}`}
+                className="w-full md:w-auto px-10 py-5 rounded-2xl font-black transition-all shadow-xl uppercase tracking-widest text-sm bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500"
               >
                 Reset & Restart Pipeline
               </button>
@@ -372,12 +356,13 @@ const App: React.FC = () => {
                 imagePreview={state.imagePreview} 
                 originalImage={state.originalImage || state.imagePreview}
                 patientDetails={state.currentPatientDetails}
-                isHighContrast={isHighContrast}
+                isHighContrast={false}
+                t={t}
               />
               <div className="flex justify-center pb-20 print:hidden">
                 <button 
                   onClick={resetAnalysis}
-                  className={`flex items-center space-x-4 px-12 py-5 rounded-2xl font-black transition-all shadow-2xl uppercase tracking-widest text-sm group ${isHighContrast ? 'bg-black text-white border-2 border-black hover:bg-white hover:text-black' : 'bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500'}`}
+                  className="flex items-center space-x-4 px-12 py-5 rounded-2xl font-black transition-all shadow-2xl uppercase tracking-widest text-sm group bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500"
                 >
                   <i className="fas fa-plus-circle group-hover:rotate-90 transition-transform"></i>
                   <span>{t('newScan')}</span>
@@ -391,12 +376,12 @@ const App: React.FC = () => {
               <VideoAnalysisResults 
                 result={state.videoResult}
                 videoPreview={state.videoPreview}
-                isHighContrast={isHighContrast}
+                isHighContrast={false}
               />
               <div className="flex justify-center pb-20">
                 <button 
                   onClick={resetVideoAnalysis}
-                  className={`flex items-center space-x-4 px-12 py-5 rounded-2xl font-black transition-all shadow-2xl uppercase tracking-widest text-sm group ${isHighContrast ? 'bg-black text-white border-2 border-black hover:bg-white hover:text-black' : 'bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500'}`}
+                  className="flex items-center space-x-4 px-12 py-5 rounded-2xl font-black transition-all shadow-2xl uppercase tracking-widest text-sm group bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500"
                 >
                   <i className="fas fa-video group-hover:text-purple-400 transition-colors"></i>
                   <span>Analyze Another Video</span>
@@ -407,18 +392,18 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <BottomNav currentView={state.view} setView={setView} isHighContrast={isHighContrast} t={t} />
+      <BottomNav currentView={state.view} setView={setView} isHighContrast={false} t={t} />
 
-      <footer className={`hidden md:block border-t py-16 mt-auto print:hidden ${isHighContrast ? 'bg-white border-black' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'}`}>
+      <footer className="hidden md:block border-t py-16 mt-auto print:hidden bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 flex flex-col items-center">
            <div className="flex items-center space-x-3 mb-8">
-              <div className={`p-2 rounded-xl ${isHighContrast ? 'bg-black' : 'bg-slate-900 dark:bg-white'}`}>
-                 <Logo className="w-8 h-8 text-white dark:text-black" isHighContrast={isHighContrast} />
+              <div className="p-2 rounded-xl bg-slate-900 dark:bg-white">
+                 <Logo className="w-8 h-8 text-white dark:text-black" isHighContrast={false} />
               </div>
-              <span className={`text-2xl font-black tracking-tighter uppercase ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>{t('appTitle')} <span className={isHighContrast ? 'text-black' : 'text-blue-600 dark:text-blue-400'}>{t('appSubtitle')}</span></span>
+              <span className="text-2xl font-black tracking-tighter uppercase text-slate-900 dark:text-white">{t('appTitle')} <span className="text-blue-600 dark:text-blue-400">{t('appSubtitle')}</span></span>
            </div>
-           <p className={`text-sm font-medium mb-8 ${isHighContrast ? 'text-black' : 'text-slate-400 dark:text-slate-500'}`}>Developed for high-throughput clinical ophthalmology environments.</p>
-           <div className={`grid grid-cols-2 md:grid-cols-4 gap-12 text-[10px] font-bold uppercase tracking-[0.3em] ${isHighContrast ? 'text-black' : 'text-slate-400 dark:text-slate-500'}`}>
+           <p className="text-sm font-medium mb-8 text-slate-400 dark:text-slate-500">Developed for high-throughput clinical ophthalmology environments.</p>
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
               <span className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">HIPAA Secured</span>
               <span className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">GDPR Privacy</span>
               <span className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">Cloud-Native</span>

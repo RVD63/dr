@@ -2,6 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { PatientDetails } from '../types';
 import { extractPatientDetails } from '../services/geminiService';
+import CameraCapture from './CameraCapture';
 
 interface ImageUploaderProps {
   onImageSelected: (base64: string, details: PatientDetails) => void;
@@ -17,9 +18,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, disabled
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('Not Specified');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [patientId, setPatientId] = useState('');
   const [scanId, setScanId] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
   const ocrInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize IDs on mount
@@ -56,11 +60,35 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, disabled
           age: age || '--',
           gender,
           id: patientId,
-          scanId: scanId // Ensure the generated Scan ID is passed here
+          scanId: scanId, // Ensure the generated Scan ID is passed here
+          phone: phone.trim(),
+          email: email.trim()
         };
         onImageSelected(reader.result as string, details);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCameraCapture = async (base64: string) => {
+    setShowCamera(false);
+    setIsExtracting(true);
+    triggerHaptic();
+    
+    try {
+      const details = await extractPatientDetails(base64);
+      
+      if (details.name) setName(details.name);
+      if (details.age) setAge(details.age);
+      if (details.gender) setGender(details.gender);
+      if (details.id) setPatientId(details.id);
+      
+      playVoiceCue("Patient details extracted successfully.");
+    } catch (error) {
+      console.error("Extraction failed", error);
+      playVoiceCue("Failed to extract details.");
+    } finally {
+      setIsExtracting(false);
     }
   };
 
@@ -96,7 +124,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, disabled
   };
 
   const triggerOCR = () => {
-    ocrInputRef.current?.click();
+    setShowCamera(true);
   };
 
   const triggerUpload = () => {
@@ -114,6 +142,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, disabled
 
   return (
     <div className="w-full space-y-8">
+      {showCamera && (
+        <CameraCapture 
+          onCapture={handleCameraCapture} 
+          onClose={() => setShowCamera(false)} 
+          isHighContrast={isHighContrast}
+        />
+      )}
       
       {/* Patient Information Form */}
       <div className={`p-6 md:p-8 rounded-[2rem] border-2 border-dashed ${isHighContrast ? 'bg-gray-50 border-black' : 'bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700'}`}>
@@ -210,6 +245,28 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, disabled
               <option value="Female">Female</option>
               <option value="Other">Other</option>
             </select>
+          </div>
+
+          <div>
+            <label className={labelClass}>Phone Number</label>
+            <input 
+              type="tel" 
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+91 98765 43210"
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>Email Address</label>
+            <input 
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="patient@example.com"
+              className={inputClass}
+            />
           </div>
         </div>
       </div>
