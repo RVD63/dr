@@ -265,7 +265,7 @@ const App: React.FC = () => {
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-500 
       ${isHighContrast 
-        ? 'bg-[#FFFDD0]' 
+        ? 'bg-white' 
         : 'bg-slate-50/50 dark:bg-slate-950'
       }`}>
       <Header 
@@ -285,9 +285,11 @@ const App: React.FC = () => {
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-10 w-full pb-32 md:pb-10">
         <div className="max-w-6xl mx-auto">
           
-          <div className="print:hidden">
-            <Disclaimer />
-          </div>
+          {state.view === 'home' && (
+            <div className="print:hidden">
+              <Disclaimer t={t} />
+            </div>
+          )}
 
           {state.view === 'home' && (
             <HomeView onStart={() => setView('upload')} isHighContrast={isHighContrast} t={t} />
@@ -349,14 +351,14 @@ const App: React.FC = () => {
                 ? 'bg-white border-black text-black' 
                 : 'bg-white dark:bg-slate-900 border-rose-100 dark:border-rose-900/50 shadow-rose-100 dark:shadow-none'
             }`}>
-              <div className={`w-16 h-16 md:w-24 md:h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 md:mb-10 shadow-inner ${isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-rose-50 dark:bg-rose-900/50 text-rose-500'}`}>
+              <div className={`w-16 h-16 md:w-24 md:h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 md:mb-10 shadow-inner ${isHighContrast ? 'bg-black text-white' : 'bg-rose-50 dark:bg-rose-900/50 text-rose-500'}`}>
                 <i className="fas fa-heart-crack text-2xl md:text-4xl"></i>
               </div>
               <h3 className={`text-2xl md:text-4xl font-black mb-4 tracking-tighter ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>Analysis Interrupted</h3>
               <p className={`text-base md:text-xl font-medium mb-8 md:mb-12 max-w-md mx-auto ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}>{state.error}</p>
               <button 
                 onClick={state.view === 'video' ? resetVideoAnalysis : resetAnalysis}
-                className={`w-full md:w-auto px-10 py-5 rounded-2xl font-black transition-all shadow-xl uppercase tracking-widest text-sm ${isHighContrast ? 'bg-black text-[#FFFDD0] border-2 border-black hover:bg-white hover:text-black' : 'bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500'}`}
+                className={`w-full md:w-auto px-10 py-5 rounded-2xl font-black transition-all shadow-xl uppercase tracking-widest text-sm ${isHighContrast ? 'bg-black text-white border-2 border-black hover:bg-white hover:text-black' : 'bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500'}`}
               >
                 Reset & Restart Pipeline
               </button>
@@ -375,7 +377,7 @@ const App: React.FC = () => {
               <div className="flex justify-center pb-20 print:hidden">
                 <button 
                   onClick={resetAnalysis}
-                  className={`flex items-center space-x-4 px-12 py-5 rounded-2xl font-black transition-all shadow-2xl uppercase tracking-widest text-sm group ${isHighContrast ? 'bg-black text-[#FFFDD0] border-2 border-black hover:bg-white hover:text-black' : 'bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500'}`}
+                  className={`flex items-center space-x-4 px-12 py-5 rounded-2xl font-black transition-all shadow-2xl uppercase tracking-widest text-sm group ${isHighContrast ? 'bg-black text-white border-2 border-black hover:bg-white hover:text-black' : 'bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500'}`}
                 >
                   <i className="fas fa-plus-circle group-hover:rotate-90 transition-transform"></i>
                   <span>{t('newScan')}</span>
@@ -394,7 +396,7 @@ const App: React.FC = () => {
               <div className="flex justify-center pb-20">
                 <button 
                   onClick={resetVideoAnalysis}
-                  className={`flex items-center space-x-4 px-12 py-5 rounded-2xl font-black transition-all shadow-2xl uppercase tracking-widest text-sm group ${isHighContrast ? 'bg-black text-[#FFFDD0] border-2 border-black hover:bg-white hover:text-black' : 'bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500'}`}
+                  className={`flex items-center space-x-4 px-12 py-5 rounded-2xl font-black transition-all shadow-2xl uppercase tracking-widest text-sm group ${isHighContrast ? 'bg-black text-white border-2 border-black hover:bg-white hover:text-black' : 'bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500'}`}
                 >
                   <i className="fas fa-video group-hover:text-purple-400 transition-colors"></i>
                   <span>Analyze Another Video</span>

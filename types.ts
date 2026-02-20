@@ -65,6 +65,13 @@ export interface HistoricalResult {
   patientDetails: PatientDetails;
 }
 
+export interface Feedback {
+  scanId: string;
+  rating: number;
+  comment: string;
+  timestamp: number;
+}
+
 export interface AnalysisState {
   view: ViewType;
   isLoading: boolean;

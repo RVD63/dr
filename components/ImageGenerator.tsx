@@ -60,7 +60,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ isHighContrast }) => {
                    onClick={() => setAspectRatio(r)}
                    className={`py-2 rounded-lg text-xs font-bold border-2 transition-all ${
                      aspectRatio === r 
-                       ? (isHighContrast ? 'bg-black text-[#FFFDD0] border-black' : 'bg-blue-600 text-white border-blue-600') 
+                       ? (isHighContrast ? 'bg-black text-white border-black' : 'bg-blue-600 text-white border-blue-600') 
                        : (isHighContrast ? 'bg-white text-black border-black hover:bg-gray-100' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-blue-300')
                    }`}
                  >
@@ -73,7 +73,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ isHighContrast }) => {
            <button 
              onClick={handleGenerate}
              disabled={isLoading || !prompt.trim()}
-             className={`w-full py-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-50 ${isHighContrast ? 'bg-black text-[#FFFDD0] border-2 border-black' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+             className={`w-full py-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-50 ${isHighContrast ? 'bg-black text-white border-2 border-black' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
            >
              {isLoading ? <span className="flex items-center justify-center gap-2"><i className="fas fa-spinner animate-spin"></i> Generating...</span> : 'Generate Visual'}
            </button>
@@ -92,7 +92,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ isHighContrast }) => {
                 <a 
                   href={generatedImage} 
                   download={`generated-retina-${Date.now()}.png`}
-                  className={`absolute bottom-4 right-4 px-6 py-2 rounded-lg font-bold shadow-xl ${isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-white text-blue-600'}`}
+                  className={`absolute bottom-4 right-4 px-6 py-2 rounded-lg font-bold shadow-xl ${isHighContrast ? 'bg-black text-white' : 'bg-white text-blue-600'}`}
                 >
                   Download
                 </a>

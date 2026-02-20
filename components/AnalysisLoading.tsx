@@ -133,16 +133,17 @@ const AnalysisLoading: React.FC<AnalysisLoadingProps> = ({ isPreprocessing, imag
         <div className="pt-4">
           <div className={`rounded-2xl p-4 inline-flex items-center space-x-3 border ${isHighContrast ? 'bg-white border-black' : 'bg-slate-100 border-slate-200'}`}>
             <div className="flex -space-x-2">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white ${isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-blue-600 text-white'}`}>1</div>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white ${isHighContrast ? 'bg-black text-white' : 'bg-blue-600 text-white'}`}>1</div>
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white transition-colors ${
                   progress > 40 
-                  ? (isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-blue-600 text-white') 
+                  ? (isHighContrast ? 'bg-black text-white' : 'bg-blue-600 text-white') 
                   : 'bg-slate-300 text-slate-500'
               }`}>2</div>
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white transition-colors ${
                   progress > 80 
-                  ? (isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-blue-600 text-white') 
+                  ? (isHighContrast ? 'bg-black text-white' : 'bg-blue-600 text-white') 
                   : 'bg-slate-300 text-slate-500'
+
               }`}>3</div>
             </div>
             <span className={`text-xs font-bold uppercase tracking-widest ${isHighContrast ? 'text-black' : 'text-slate-500'}`}>

@@ -1,6 +1,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { PatientDetails } from '../types';
+import { extractPatientDetails } from '../services/geminiService';
 
 interface ImageUploaderProps {
   onImageSelected: (base64: string, details: PatientDetails) => void;
@@ -18,6 +19,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, disabled
   const [gender, setGender] = useState('Not Specified');
   const [patientId, setPatientId] = useState('');
   const [scanId, setScanId] = useState('');
+  const [isExtracting, setIsExtracting] = useState(false);
+  const ocrInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize IDs on mount
   useEffect(() => {
@@ -61,6 +64,41 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, disabled
     }
   };
 
+  const handleOCRFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setIsExtracting(true);
+      triggerHaptic();
+      
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const base64 = reader.result as string;
+          const details = await extractPatientDetails(base64);
+          
+          if (details.name) setName(details.name);
+          if (details.age) setAge(details.age);
+          if (details.gender) setGender(details.gender);
+          if (details.id) setPatientId(details.id);
+          
+          playVoiceCue("Patient details extracted successfully.");
+        } catch (error) {
+          console.error("Extraction failed", error);
+          playVoiceCue("Failed to extract details.");
+        } finally {
+          setIsExtracting(false);
+          // Reset the input so the same file can be selected again if needed
+          if (ocrInputRef.current) ocrInputRef.current.value = '';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerOCR = () => {
+    ocrInputRef.current?.click();
+  };
+
   const triggerUpload = () => {
     if (disabled) return;
     // Basic validation could go here
@@ -79,10 +117,29 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, disabled
       
       {/* Patient Information Form */}
       <div className={`p-6 md:p-8 rounded-[2rem] border-2 border-dashed ${isHighContrast ? 'bg-gray-50 border-black' : 'bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700'}`}>
-        <h3 className={`text-xl font-black tracking-tight mb-6 flex items-center gap-3 ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>
-          <i className="fas fa-user-circle text-2xl opacity-50"></i>
-          <span>Patient Details</span>
-        </h3>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className={`text-xl font-black tracking-tight flex items-center gap-3 ${isHighContrast ? 'text-black' : 'text-slate-900 dark:text-white'}`}>
+            <i className="fas fa-user-circle text-2xl opacity-50"></i>
+            <span>Patient Details</span>
+          </h3>
+          
+          <button
+            onClick={triggerOCR}
+            disabled={isExtracting}
+            className={`text-xs px-3 py-2 rounded-lg flex items-center gap-2 transition-all font-bold uppercase tracking-wider ${
+              isHighContrast 
+                ? 'bg-black text-white hover:bg-gray-800' 
+                : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50'
+            }`}
+          >
+            {isExtracting ? (
+              <i className="fas fa-spinner fa-spin"></i>
+            ) : (
+              <i className="fas fa-id-card"></i>
+            )}
+            {isExtracting ? 'Scanning...' : 'Scan ID Card'}
+          </button>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
@@ -160,6 +217,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, disabled
       {/* Upload Area */}
       <input
         type="file"
+        ref={ocrInputRef}
+        onChange={handleOCRFileChange}
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+      />
+      <input
+        type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
         accept="image/*"
@@ -172,7 +237,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, disabled
           relative border-4 border-dashed rounded-[2rem] p-8 md:p-12 flex flex-col items-center justify-center transition-all cursor-pointer group active:scale-[0.98]
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.01]'}
           ${isHighContrast 
-            ? 'bg-[#FFFDD0] border-black hover:bg-white' 
+            ? 'bg-white border-black hover:bg-white' 
             : 'bg-white dark:bg-slate-900 border-blue-200 dark:border-blue-900 hover:border-blue-400 dark:hover:border-blue-700 hover:bg-blue-50/30 dark:hover:bg-blue-900/10'
           }
         `}
@@ -181,7 +246,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, disabled
       >
         <div className={`
           p-6 rounded-full mb-6 transition-transform group-hover:rotate-12
-          ${isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'}
+          ${isHighContrast ? 'bg-black text-white' : 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'}
         `}>
           <i className="fas fa-camera text-4xl"></i>
         </div>
@@ -199,7 +264,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, disabled
           className={`
             w-full md:w-auto px-12 py-4 rounded-2xl font-black text-lg uppercase tracking-widest shadow-xl transition-all
             ${isHighContrast 
-              ? 'bg-black text-[#FFFDD0] border-2 border-black hover:bg-white hover:text-black' 
+              ? 'bg-black text-white border-2 border-black hover:bg-white hover:text-black' 
               : 'bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50'
             }
           `}

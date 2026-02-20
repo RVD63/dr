@@ -14,7 +14,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onStart, isHighContrast, t }) => {
       <section className={`
         relative overflow-hidden rounded-[2.5rem] p-8 md:p-20 shadow-2xl border-4
         ${isHighContrast 
-          ? 'bg-[#FFFDD0] border-black text-black' 
+          ? 'bg-white border-black text-black' 
           : 'bg-slate-900 dark:bg-slate-950 border-slate-900 dark:border-slate-800 text-white'
         }
       `}>
@@ -28,7 +28,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onStart, isHighContrast, t }) => {
         <div className="relative z-10 max-w-3xl">
           <span className={`
             inline-block px-4 py-2 rounded-full text-[10px] md:text-xs font-black uppercase tracking-[0.3em] mb-6 md:mb-8 border-2
-            ${isHighContrast ? 'bg-black text-[#FFFDD0] border-black' : 'bg-blue-500/20 text-blue-400 border-blue-500/30'}
+            ${isHighContrast ? 'bg-black text-white border-black' : 'bg-blue-500/20 text-blue-400 border-blue-500/30'}
           `}>
             Next-Gen Ophthalmology v4.0
           </span>
@@ -44,7 +44,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onStart, isHighContrast, t }) => {
               className={`
                 w-full md:w-auto px-12 py-6 rounded-2xl font-black uppercase tracking-widest text-base md:text-lg transition-all shadow-xl flex items-center justify-center group border-4 active:scale-95
                 ${isHighContrast 
-                  ? 'bg-black text-[#FFFDD0] border-black hover:bg-white hover:text-black' 
+                  ? 'bg-black text-white border-black hover:bg-white hover:text-black' 
                   : 'bg-blue-600 border-blue-600 hover:bg-blue-700 text-white'
                 }
               `}
@@ -55,7 +55,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onStart, isHighContrast, t }) => {
             <button className={`
               w-full md:w-auto px-12 py-6 rounded-2xl font-black uppercase tracking-widest text-base md:text-lg transition-all border-4 active:scale-95
               ${isHighContrast 
-                ? 'bg-white text-black border-black hover:bg-black hover:text-[#FFFDD0]' 
+                ? 'bg-white text-black border-black hover:bg-black hover:text-white' 
                 : 'bg-slate-800 dark:bg-slate-900 text-white border-slate-700 dark:border-slate-800 hover:bg-slate-750 dark:hover:bg-slate-800'
               }
             `}>
@@ -101,21 +101,21 @@ const HomeView: React.FC<HomeViewProps> = ({ onStart, isHighContrast, t }) => {
             <div key={i} className={`
               group p-8 md:p-12 rounded-[2.5rem] border-4 transition-all
               ${isHighContrast 
-                ? 'bg-white border-black hover:bg-black hover:text-[#FFFDD0]' 
+                ? 'bg-white border-black hover:bg-black hover:text-white' 
                 : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-blue-100 dark:hover:border-blue-900 hover:shadow-xl dark:hover:shadow-blue-900/20'
               }
             `}>
               <div className={`
                 w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-6 md:mb-8 transition-colors
                 ${isHighContrast 
-                  ? 'bg-black text-[#FFFDD0] group-hover:bg-[#FFFDD0] group-hover:text-black' 
+                  ? 'bg-black text-white group-hover:bg-white group-hover:text-black' 
                   : 'bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 group-hover:bg-blue-600 group-hover:text-white'
                 }
               `}>
                 <i className={`fas ${f.icon} text-xl md:text-2xl`}></i>
               </div>
-              <h4 className={`text-xl md:text-2xl font-bold mb-4 ${isHighContrast ? 'group-hover:text-[#FFFDD0]' : 'text-slate-900 dark:text-white'}`}>{f.title}</h4>
-              <p className={`font-medium leading-relaxed text-base md:text-lg ${isHighContrast ? 'group-hover:text-[#FFFDD0]' : 'text-slate-500 dark:text-slate-400'}`}>{f.desc}</p>
+              <h4 className={`text-xl md:text-2xl font-bold mb-4 ${isHighContrast ? 'group-hover:text-white' : 'text-slate-900 dark:text-white'}`}>{f.title}</h4>
+              <p className={`font-medium leading-relaxed text-base md:text-lg ${isHighContrast ? 'group-hover:text-white' : 'text-slate-500 dark:text-slate-400'}`}>{f.desc}</p>
             </div>
           ))}
         </div>

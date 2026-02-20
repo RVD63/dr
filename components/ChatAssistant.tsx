@@ -126,12 +126,12 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isHighContrast, lang, t }
   ];
 
   return (
-    <div className={`flex flex-col h-[calc(100vh-12rem)] md:h-[80vh] rounded-3xl overflow-hidden shadow-2xl border ${isHighContrast ? 'bg-[#FFFDD0] border-black' : 'bg-white border-slate-200'} animate-in slide-in-from-bottom-4 duration-500`}>
+    <div className={`flex flex-col h-[calc(100vh-12rem)] md:h-[80vh] rounded-3xl overflow-hidden shadow-2xl border ${isHighContrast ? 'bg-white border-black' : 'bg-white border-slate-200'} animate-in slide-in-from-bottom-4 duration-500`}>
       
       {/* Header */}
-      <div className={`p-4 md:p-6 border-b flex items-center justify-between flex-shrink-0 ${isHighContrast ? 'bg-black text-[#FFFDD0] border-black' : 'bg-slate-50 border-slate-100'}`}>
+      <div className={`p-4 md:p-6 border-b flex items-center justify-between flex-shrink-0 ${isHighContrast ? 'bg-black text-white border-black' : 'bg-slate-50 border-slate-100'}`}>
         <div className="flex items-center space-x-3 md:space-x-4">
-          <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center ${isHighContrast ? 'bg-[#FFFDD0] text-black' : 'bg-blue-600 text-white'}`}>
+          <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center ${isHighContrast ? 'bg-white text-black' : 'bg-blue-600 text-white'}`}>
             <i className="fas fa-robot text-lg md:text-xl"></i>
           </div>
           <div>
@@ -145,8 +145,8 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isHighContrast, lang, t }
           onClick={() => setUseSearch(!useSearch)}
           className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border-2 transition-all flex items-center gap-2 ${
             useSearch 
-             ? (isHighContrast ? 'bg-[#FFFDD0] text-black border-[#FFFDD0]' : 'bg-blue-600 text-white border-blue-600')
-             : (isHighContrast ? 'border-[#FFFDD0] text-[#FFFDD0]' : 'bg-white text-slate-500 border-slate-200')
+             ? (isHighContrast ? 'bg-white text-black border-white' : 'bg-blue-600 text-white border-blue-600')
+             : (isHighContrast ? 'border-white text-white' : 'bg-white text-slate-500 border-slate-200')
           }`}
         >
           <i className={`fas ${useSearch ? 'fa-globe' : 'fa-brain'}`}></i>
@@ -164,7 +164,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isHighContrast, lang, t }
                 ${msg.isEmergency 
                   ? 'bg-red-600 text-white border-4 border-red-800 animate-pulse' 
                   : msg.role === 'user' 
-                    ? (isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-blue-600 text-white rounded-tr-none') 
+                    ? (isHighContrast ? 'bg-black text-white' : 'bg-blue-600 text-white rounded-tr-none') 
                     : (isHighContrast ? 'bg-white border-2 border-black text-black' : 'bg-slate-100 text-slate-800 rounded-tl-none')
                 }
               `}
@@ -217,7 +217,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isHighContrast, lang, t }
       </div>
 
       {/* Quick Replies & Input */}
-      <div className={`p-3 md:p-4 flex-shrink-0 ${isHighContrast ? 'bg-[#FFFDD0] border-t-2 border-black' : 'bg-white border-t border-slate-100'}`}>
+      <div className={`p-3 md:p-4 flex-shrink-0 ${isHighContrast ? 'bg-white border-t-2 border-black' : 'bg-white border-t border-slate-100'}`}>
         <div className="flex gap-2 md:gap-3 overflow-x-auto pb-3 scrollbar-hide">
           {quickReplies.map((reply) => (
             <button
@@ -226,7 +226,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isHighContrast, lang, t }
               className={`
                 whitespace-nowrap px-4 py-2 md:px-6 md:py-3 rounded-full font-bold text-xs md:text-sm transition-transform active:scale-95
                 ${isHighContrast 
-                  ? 'bg-white border-2 border-black text-black shadow-none hover:bg-black hover:text-[#FFFDD0]' 
+                  ? 'bg-white border-2 border-black text-black shadow-none hover:bg-black hover:text-white' 
                   : 'bg-slate-100 text-blue-600 hover:bg-blue-50 border border-slate-200'
                 }
               `}
@@ -256,7 +256,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isHighContrast, lang, t }
             onClick={() => handleSend(input)}
             className={`
               w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center transition-transform active:scale-90 flex-shrink-0
-              ${isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-blue-600 text-white shadow-lg shadow-blue-200'}
+              ${isHighContrast ? 'bg-black text-white' : 'bg-blue-600 text-white shadow-lg shadow-blue-200'}
             `}
             aria-label="Send Message"
           >

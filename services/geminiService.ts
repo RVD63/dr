@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { AnalysisResult, VideoAnalysisResult, ChatMessage, Language, AspectRatio } from "../types";
+import { AnalysisResult, VideoAnalysisResult, ChatMessage, Language, AspectRatio, PatientDetails } from "../types";
 
 // Helper function to safely retrieve the API key
 const getApiKey = (): string => {
@@ -30,14 +30,16 @@ export const analyzeRetinalImage = async (base64Image: string, language: Languag
 
   const ai = new GoogleGenAI({ apiKey });
   const langName = getLanguageName(language);
-  
-  const prompt = `
+    const prompt = `
     As a Senior Ophthalmology AI Specialist, provide a quantitative and qualitative analysis of this retinal fundus scan.
     
     IMPORTANT: Provide the response text (narratives, recommendations) in the following language: ${langName}.
     
     CRITICAL INSTRUCTION:
     In the 'detailedPathology' field, provide a narrative that describes the visual evidence as if analyzing the image layers. 
+    **YOU MUST EXPLAIN THE BASIS FOR THE ASSIGNED SEVERITY GRADE** using the **International Clinical Diabetic Retinopathy (ICDR) scale**.
+    - Clearly state the specific findings (e.g., "presence of microaneurysms only", "more than 20 intraretinal hemorrhages in each of 4 quadrants") that justify the selected severity level.
+    
     Explicitly mention what would be seen in a contrast-enhanced view (CLAHE) versus the original view. 
     Describe specific features like:
     1. Optic Disc appearance.
@@ -46,7 +48,7 @@ export const analyzeRetinalImage = async (base64Image: string, language: Languag
     
     REQUIRED METRICS:
     - Detection: (Detected/Not Detected) - Translate this value to ${langName} if possible, or keep English clinical terms.
-    - Severity: (No DR, Mild, Moderate, Severe, Proliferative) - Translate this value to ${langName} if possible.
+    - Severity: (No DR, Mild, Moderate, Severe, Proliferative) - Strictly follow the International Clinical Diabetic Retinopathy (ICDR) scale. Translate this value to ${langName} if possible.
     - Health Score: 0-100 (100 = Optimal health, 0 = High pathology)
     - Severity Index: 0-100 (0 = No DR, 100 = Advanced Proliferative)
     - Progression Risk: 0-100% (Probability of condition worsening within 12 months)
@@ -247,3 +249,59 @@ export const generateMedicalImage = async (prompt: string, aspectRatio: AspectRa
     }
     throw new Error("No image generated.");
 };
+
+export const extractPatientDetails = async (base64Image: string): Promise<Partial<PatientDetails>> => {
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error("Configuration Error: API Key is missing.");
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  const prompt = `
+    Extract patient details from this medical document or ID card.
+    Return a JSON object with the following fields if found:
+    - name (string): Full name of the patient
+    - age (string): Age of the patient (e.g., "45", "32 years")
+    - gender (string): "Male", "Female", or "Other"
+    - id (string): Patient ID or Medical Record Number if visible
+    
+    If a field is not found, exclude it or set it to null.
+    Do not invent information.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType: 'image/jpeg',
+              data: base64Image.split(',')[1] || base64Image,
+            },
+          },
+          { text: prompt },
+        ],
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            name: { type: Type.STRING },
+            age: { type: Type.STRING },
+            gender: { type: Type.STRING },
+            id: { type: Type.STRING },
+          },
+        },
+      },
+    });
+
+    const resultText = response.text;
+    if (!resultText) return {};
+    return JSON.parse(resultText) as Partial<PatientDetails>;
+  } catch (error) {
+    console.error("OCR Error:", error);
+    return {};
+  }
+};
+

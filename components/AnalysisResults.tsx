@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { AnalysisResult, DRSeverity, PatientDetails } from '../types';
+import { AnalysisResult, DRSeverity, PatientDetails, Feedback } from '../types';
 
 interface AnalysisResultsProps {
   result: AnalysisResult;
@@ -49,7 +49,46 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
-  // Function to generate a Jet colormap (Blue -> Cyan -> Green -> Yellow -> Red)
+  // Feedback State
+  const [rating, setRating] = useState<number>(0);
+  const [comment, setComment] = useState('');
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+
+  useEffect(() => {
+    // Check if feedback already exists for this scan
+    const savedFeedback = localStorage.getItem('retina_feedback');
+    if (savedFeedback) {
+      const allFeedback: Feedback[] = JSON.parse(savedFeedback);
+      const existing = allFeedback.find(f => f.scanId === patientDetails.scanId);
+      if (existing) {
+        setRating(existing.rating);
+        setComment(existing.comment);
+        setFeedbackSubmitted(true);
+      }
+    }
+  }, [patientDetails.scanId]);
+
+  const handleFeedbackSubmit = () => {
+    if (rating === 0) return;
+
+    const newFeedback: Feedback = {
+      scanId: patientDetails.scanId,
+      rating,
+      comment,
+      timestamp: Date.now()
+    };
+
+    const savedFeedback = localStorage.getItem('retina_feedback');
+    const allFeedback: Feedback[] = savedFeedback ? JSON.parse(savedFeedback) : [];
+    
+    // Remove existing if any (update)
+    const filtered = allFeedback.filter(f => f.scanId !== patientDetails.scanId);
+    
+    localStorage.setItem('retina_feedback', JSON.stringify([...filtered, newFeedback]));
+    setFeedbackSubmitted(true);
+    alert("Thank you for your feedback!");
+  };
+
   const getJetColor = (v: number) => {
     let r = 0, g = 0, b = 0;
     // Clamp v between 0 and 1
@@ -435,7 +474,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
         <div className="flex flex-col items-center md:items-end">
           <div className={`text-sm font-black uppercase tracking-tighter px-4 py-2 rounded-xl mb-1 ${
               isHighContrast 
-              ? 'bg-black text-[#FFFDD0]' 
+              ? 'bg-black text-white' 
               : result.detection.includes('Not') 
                 ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300' 
                 : 'bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-300'
@@ -501,7 +540,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
                       relative flex flex-col items-center justify-center py-4 px-2 rounded-xl transition-all duration-200 border-2
                       ${activeTab === tab.id 
                         ? (isHighContrast 
-                            ? 'bg-black text-[#FFFDD0] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]' 
+                            ? 'bg-black text-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]' 
                             : 'bg-blue-600 text-white border-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.5)] scale-105 z-10') 
                         : (isHighContrast 
                             ? 'bg-white text-black border-black hover:bg-gray-100' 
@@ -523,7 +562,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
                   className={`
                     flex-1 py-4 rounded-xl font-bold uppercase tracking-widest text-xs flex items-center justify-center space-x-2 transition-all border-2
                     ${isHighContrast 
-                      ? 'bg-white text-black border-black hover:bg-black hover:text-[#FFFDD0]' 
+                      ? 'bg-white text-black border-black hover:bg-black hover:text-white' 
                       : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white hover:border-slate-500'
                     }
                   `}
@@ -538,7 +577,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
                   className={`
                     flex-1 py-4 rounded-xl font-bold uppercase tracking-widest text-xs flex items-center justify-center space-x-2 transition-all border-2
                     ${isHighContrast 
-                      ? 'bg-white text-black border-black hover:bg-black hover:text-[#FFFDD0]' 
+                      ? 'bg-white text-black border-black hover:bg-black hover:text-white' 
                       : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white hover:border-slate-500'
                     }
                   `}
@@ -554,7 +593,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
                   className={`
                     flex-1 py-4 rounded-xl font-bold uppercase tracking-widest text-xs flex items-center justify-center space-x-2 transition-all border-2
                     ${isHighContrast 
-                      ? 'bg-white text-black border-black hover:bg-black hover:text-[#FFFDD0]' 
+                      ? 'bg-white text-black border-black hover:bg-black hover:text-white' 
                       : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white hover:border-slate-500'
                     }
                   `}
@@ -640,7 +679,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
               {/* Interactive Tooltip - Positioned absolutely within container but logic handles visual offset */}
               {tooltip.visible && !isDragging && (
                 <div 
-                  className={`absolute z-50 pointer-events-none text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border shadow-2xl backdrop-blur-md transform -translate-x-1/2 -translate-y-full mb-3 ${isHighContrast ? 'bg-black text-[#FFFDD0] border-black' : 'bg-slate-900/95 text-white border-slate-500/50'}`}
+                  className={`absolute z-50 pointer-events-none text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border shadow-2xl backdrop-blur-md transform -translate-x-1/2 -translate-y-full mb-3 ${isHighContrast ? 'bg-black text-white border-black' : 'bg-slate-900/95 text-white border-slate-500/50'}`}
                   style={{ top: tooltip.y, left: tooltip.x }}
                 >
                   <div className="flex items-center space-x-2 whitespace-nowrap">
@@ -792,7 +831,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
                   {result.keyFindings.map((finding, idx) => (
                     <li key={idx} className={`flex flex-col group ${isHighContrast ? 'text-black' : 'text-slate-400 dark:text-slate-300'} print:text-black`}>
                       <div className="flex items-start cursor-pointer" onClick={() => setExpandedFinding(expandedFinding === idx ? null : idx)}>
-                        <div className={`mt-1 mr-4 p-1.5 rounded-lg transition-colors ${isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-slate-800 dark:bg-slate-800 text-slate-500 group-hover:bg-blue-600/20 group-hover:text-blue-400'} print:bg-slate-200 print:text-black`}>
+                        <div className={`mt-1 mr-4 p-1.5 rounded-lg transition-colors ${isHighContrast ? 'bg-black text-white' : 'bg-slate-800 dark:bg-slate-800 text-slate-500 group-hover:bg-blue-600/20 group-hover:text-blue-400'} print:bg-slate-200 print:text-black`}>
                           <i className="fas fa-microscope text-xs"></i>
                         </div>
                         <span className="text-sm font-medium leading-tight flex-grow">{finding}</span>
@@ -800,13 +839,9 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
                           <i className={`fas ${expandedFinding === idx ? 'fa-chevron-up' : 'fa-info-circle'} text-xs opacity-70 hover:opacity-100 ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}></i>
                         </button>
                       </div>
-                      
                       {expandedFinding === idx && (
-                        <div className={`mt-3 ml-11 text-xs p-4 rounded-xl shadow-inner animate-in fade-in slide-in-from-top-2 duration-300 ${isHighContrast ? 'bg-gray-100 text-black border-l-4 border-black' : 'bg-slate-800/40 text-slate-300 border-l-4 border-blue-500'}`}>
-                           <p className="leading-relaxed">
-                             <span className="font-bold mr-1">Medical Note:</span>
-                             {getFindingExplanation(finding)}
-                           </p>
+                        <div className={`mt-3 ml-11 p-3 rounded-xl text-xs leading-relaxed animate-in fade-in slide-in-from-top-2 ${isHighContrast ? 'bg-gray-100 text-black' : 'bg-slate-800/50 text-slate-400'} print:bg-slate-100 print:text-black`}>
+                          {getFindingExplanation(finding)}
                         </div>
                       )}
                     </li>
@@ -814,18 +849,66 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, imagePreview,
                 </ul>
               </section>
 
-              <section className="space-y-6">
-                <div className={`p-6 rounded-[2rem] border relative overflow-hidden group ${isHighContrast ? 'bg-white border-black' : 'bg-indigo-600/10 dark:bg-indigo-900/10 border-indigo-600/20 dark:border-indigo-500/20'} print:border-slate-200 print:bg-white`}>
-                  {!isHighContrast && <div className="absolute -top-4 -right-4 bg-indigo-600/10 w-24 h-24 rounded-full blur-2xl group-hover:bg-indigo-600/20 transition-all print:hidden"></div>}
-                  <h3 className={`text-xs font-bold uppercase tracking-[0.3em] mb-4 relative z-10 ${isHighContrast ? 'text-black' : 'text-indigo-400 dark:text-indigo-300'} print:text-black`}>Clinical Advice</h3>
-                  <p className={`text-sm font-bold leading-relaxed relative z-10 ${isHighContrast ? 'text-black' : 'text-indigo-100 dark:text-indigo-200'} print:text-black`}>
-                    {result.recommendation}
+              {/* Feedback Section */}
+              <section className="print:hidden">
+                <h3 className={`text-xs font-bold uppercase tracking-[0.3em] mb-6 ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'}`}>Diagnostic Feedback</h3>
+                <div className={`p-6 rounded-2xl border ${isHighContrast ? 'bg-white border-black' : 'bg-slate-800/30 dark:bg-slate-900/50 border-slate-800 dark:border-slate-800'}`}>
+                  <p className={`text-sm mb-4 font-medium ${isHighContrast ? 'text-black' : 'text-slate-400'}`}>
+                    How accurate is this diagnosis? Your feedback helps improve our AI models.
                   </p>
-                </div>
-                
-                <div className={`p-5 rounded-2xl border flex items-center justify-between ${isHighContrast ? 'bg-white border-black' : 'bg-slate-800/40 dark:bg-slate-900/60 border-slate-700 dark:border-slate-800'} print:border-slate-200 print:bg-white`}>
-                  <span className={`text-[10px] font-bold uppercase tracking-widest ${isHighContrast ? 'text-black' : 'text-slate-500 dark:text-slate-400'} print:text-slate-600`}>Lesion Count (est.)</span>
-                  <span className={`px-3 py-1 rounded-lg font-black ${isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-slate-700 dark:bg-slate-800 text-white'} print:bg-black print:text-white`}>{result.clinicalMetrics.microaneurysmsCount}</span>
+                  
+                  <div className="flex items-center space-x-2 mb-4">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => !feedbackSubmitted && setRating(star)}
+                        disabled={feedbackSubmitted}
+                        className={`text-2xl focus:outline-none transition-transform active:scale-110 ${
+                          star <= rating 
+                            ? (isHighContrast ? 'text-black' : 'text-yellow-400') 
+                            : (isHighContrast ? 'text-gray-300' : 'text-slate-600')
+                        } ${feedbackSubmitted ? 'cursor-default' : 'cursor-pointer hover:scale-110'}`}
+                      >
+                        <i className="fas fa-star"></i>
+                      </button>
+                    ))}
+                    <span className={`ml-2 text-xs font-bold uppercase tracking-wider ${isHighContrast ? 'text-black' : 'text-slate-500'}`}>
+                      {rating > 0 ? ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][rating - 1] : 'Rate Accuracy'}
+                    </span>
+                  </div>
+
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    disabled={feedbackSubmitted}
+                    placeholder="Add clinical notes or comments (optional)..."
+                    className={`w-full p-3 rounded-xl text-sm mb-4 outline-none border transition-all ${
+                      isHighContrast 
+                        ? 'bg-white border-black text-black placeholder-gray-500 focus:ring-2 focus:ring-black' 
+                        : 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                    } ${feedbackSubmitted ? 'opacity-70' : ''}`}
+                    rows={3}
+                  />
+
+                  <button
+                    onClick={handleFeedbackSubmit}
+                    disabled={rating === 0 || feedbackSubmitted}
+                    className={`
+                      w-full py-3 rounded-xl font-bold uppercase tracking-widest text-xs transition-all
+                      ${feedbackSubmitted
+                        ? (isHighContrast ? 'bg-black text-white opacity-50 cursor-default' : 'bg-green-600 text-white cursor-default')
+                        : (isHighContrast 
+                            ? 'bg-black text-white hover:bg-gray-800' 
+                            : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed')
+                      }
+                    `}
+                  >
+                    {feedbackSubmitted ? (
+                      <span><i className="fas fa-check mr-2"></i>Feedback Submitted</span>
+                    ) : (
+                      'Submit Feedback'
+                    )}
+                  </button>
                 </div>
               </section>
             </div>

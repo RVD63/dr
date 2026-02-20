@@ -24,7 +24,7 @@ const VideoAnalysisResults: React.FC<VideoAnalysisResultsProps> = ({ result, vid
         <div className="flex flex-col items-center md:items-end">
           <div className={`text-sm font-black uppercase tracking-tighter px-4 py-2 rounded-xl mb-1 ${
              isHighContrast 
-             ? 'bg-black text-[#FFFDD0]' 
+             ? 'bg-black text-white' 
              : !result.drDetails.detected ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
           }`}>
             {result.drDetails.detected ? 'DR Signs Detected' : 'No DR Signs Detected'}

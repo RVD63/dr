@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ViewType, Language } from '../types';
 import Logo from './Logo';
+import { Sun, Moon, Contrast } from 'lucide-react';
 
 interface HeaderProps {
   currentView: ViewType;
@@ -60,7 +61,7 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header className={`${
       isHighContrast 
-        ? 'bg-[#FFFDD0] border-b-2 border-black' 
+        ? 'bg-white border-b-2 border-black' 
         : 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800'
     } sticky top-0 z-50 transition-all duration-300 print:hidden safe-top`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 md:h-20 flex items-center justify-between gap-2">
@@ -97,7 +98,7 @@ const Header: React.FC<HeaderProps> = ({
                 className={`
                   px-4 py-2 rounded-lg text-sm font-bold transition-all mx-0.5
                   ${currentView === item.id 
-                    ? (isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm') 
+                    ? (isHighContrast ? 'bg-black text-white' : 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm') 
                     : (isHighContrast ? 'text-black hover:bg-gray-100' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200')
                   }
                 `}
@@ -108,7 +109,7 @@ const Header: React.FC<HeaderProps> = ({
           {hasResult && (
             <button 
               onClick={() => handleNav('report')}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all mx-0.5 ${isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'}`}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all mx-0.5 ${isHighContrast ? 'bg-black text-white' : 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'}`}
             >
               {t('latestReport')}
             </button>
@@ -154,7 +155,7 @@ const Header: React.FC<HeaderProps> = ({
                     className={`
                       w-full px-4 py-2.5 text-left text-xs font-bold flex items-center justify-between transition-colors
                       ${lang === l.code 
-                        ? (isHighContrast ? 'bg-black text-[#FFFDD0]' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400') 
+                        ? (isHighContrast ? 'bg-black text-white' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400') 
                         : (isHighContrast ? 'text-black hover:bg-gray-100' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800')
                       }
                     `}
@@ -182,7 +183,7 @@ const Header: React.FC<HeaderProps> = ({
             disabled={isHighContrast}
             aria-label={t('toggleTheme')}
           >
-            <i className={`fas ${theme === 'dark' ? 'fa-moon' : 'fa-sun'} text-sm md:text-base`}></i>
+            {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
           </button>
 
           {/* Contrast Toggle */}
@@ -191,13 +192,13 @@ const Header: React.FC<HeaderProps> = ({
             className={`
               w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all border
               ${isHighContrast 
-                ? 'bg-black text-[#FFFDD0] border-black shadow-none' 
+                ? 'bg-black text-white border-black shadow-none' 
                 : 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-slate-200 dark:border-slate-700 hover:bg-slate-50 shadow-sm'
               }
             `}
             aria-label={t('toggleContrast')}
           >
-            <i className="fas fa-adjust text-sm md:text-base"></i>
+            <Contrast size={18} />
           </button>
         </div>
       </div>
