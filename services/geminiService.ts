@@ -4,11 +4,11 @@ import { AnalysisResult, VideoAnalysisResult, ChatMessage, Language, AspectRatio
 
 // Helper function to safely retrieve the API key
 const getApiKey = (): string => {
-  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_KEY) {
-    return (import.meta as any).env.VITE_API_KEY;
+  if (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) {
+    return process.env.GEMINI_API_KEY;
   }
-  if (typeof process !== 'undefined' && process.env?.API_KEY) {
-    return process.env.API_KEY;
+  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GEMINI_API_KEY) {
+    return (import.meta as any).env.VITE_GEMINI_API_KEY;
   }
   return '';
 };
