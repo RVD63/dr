@@ -165,7 +165,9 @@ _${t('disclaimerText')}_
     const message = generateReportMessage();
     const phone = patientDetails.phone ? patientDetails.phone.replace(/\D/g, '') : '';
     const url = `sms:${phone}?body=${message}`;
-    window.open(url, '_blank');
+    const link = document.createElement('a');
+    link.href = url;
+    link.click();
   };
 
   const handleEmail = () => {
@@ -173,7 +175,9 @@ _${t('disclaimerText')}_
     const body = generateReportMessage();
     const email = patientDetails.email || '';
     const url = `mailto:${email}?subject=${subject}&body=${body}`;
-    window.open(url, '_blank');
+    const link = document.createElement('a');
+    link.href = url;
+    link.click();
   };
 
   const handleShare = async () => {
